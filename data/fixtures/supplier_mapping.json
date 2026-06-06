@@ -1,0 +1,31 @@
+{
+  "id": "mapping-supplier-portal-v1",
+  "name": "Supplier portal item mapping",
+  "version": "mapping-v1",
+  "source_type": "supplier_portal",
+  "field_map": {
+    "sku": "supplier_item",
+    "name": "description",
+    "brand": "brand_name",
+    "category": "dept",
+    "gtin": "barcode",
+    "supplier": "supplier_name",
+    "pack_level": "uom",
+    "units_per_pack": "case_qty",
+    "weight": "weight_oz",
+    "facility": "warehouse",
+    "location": "bin",
+    "on_hand": "qty"
+  },
+  "defaults": {
+    "lifecycle": "active",
+    "status": "active"
+  },
+  "conversions": {
+    "weight": {
+      "from": "oz",
+      "to": "lb",
+      "factor": 0.0625
+    }
+  }
+}

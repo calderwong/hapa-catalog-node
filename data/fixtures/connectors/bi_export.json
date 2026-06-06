@@ -1,0 +1,12 @@
+{
+  "source": "bi",
+  "schema_version": "connector-contract-v1",
+  "metrics": [
+    {
+      "sku": "B095QX1FSR",
+      "forecast_runs": 1,
+      "price_points": 3,
+      "inventory_available": 12
+    }
+  ]
+}

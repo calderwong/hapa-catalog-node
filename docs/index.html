@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>.hapaCatalog Demo</title>
+    <link rel="stylesheet" href="demo-site.css" />
+  </head>
+  <body>
+    <main id="demoApp" class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Hapa Protocol Node</p>
+          <h1>.hapaCatalog</h1>
+        </div>
+        <div class="status-strip" aria-label="Snapshot status">
+          <span class="dot ok"></span>
+          <span>static demo</span>
+          <span id="skuChip" class="chip">0 SKUs</span>
+          <span id="boardChip" class="chip">0 cards</span>
+          <span id="forecastChip" class="chip">0 forecasts</span>
+        </div>
+      </header>
+
+      <section class="command-bar">
+        <div>
+          <span class="micro-label">Pages Snapshot</span>
+          <strong id="generatedAt">Loading demo data</strong>
+        </div>
+        <a id="githubLink" class="button-link" href="https://github.com/calderwong/hapa-catalog-node">GitHub</a>
+        <a class="button-link" href="GITHUB_PAGES_DEMO.md">Demo docs</a>
+      </section>
+
+      <section class="workspace">
+        <aside class="sidebar">
+          <section class="panel">
+            <h2>Search</h2>
+            <input id="searchInput" type="search" placeholder="SKU, brand, category..." />
+            <select id="categoryFilter" aria-label="Filter by category"></select>
+            <select id="brandFilter" aria-label="Filter by brand"></select>
+            <select id="statusFilter" aria-label="Filter by status"></select>
+          </section>
+
+          <nav class="panel nav-list" aria-label="Demo sections">
+            <button class="nav active" data-view="items">Items</button>
+            <button class="nav" data-view="board">Board</button>
+            <button class="nav" data-view="cards">Cards</button>
+            <button class="nav" data-view="forecast">Forecast</button>
+            <button class="nav" data-view="ops">Ops</button>
+            <button class="nav" data-view="docs">Docs</button>
+          </nav>
+
+          <section class="panel">
+            <h2>Fixture Shape</h2>
+            <div id="fixtureStats" class="mini-grid"></div>
+          </section>
+        </aside>
+
+        <section class="content">
+          <section class="list-panel">
+            <div class="panel-head">
+              <h2 id="listTitle">Item Master</h2>
+              <span id="listMeta" class="muted">Loading</span>
+            </div>
+            <div id="list" class="list"></div>
+          </section>
+
+          <aside class="inspector">
+            <div class="panel-head">
+              <h2>Inspector</h2>
+              <span id="inspectorBadge" class="badge">snapshot</span>
+            </div>
+            <div id="inspectorBody" class="inspector-body"></div>
+          </aside>
+        </section>
+      </section>
+    </main>
+    <script src="demo-site.js"></script>
+  </body>
+</html>

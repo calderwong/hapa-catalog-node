@@ -1,0 +1,27 @@
+{
+  "id": "hapa-catalog-node",
+  "name": ".hapaCatalog",
+  "version": "0.1.0",
+  "kind": "hapa.protocol.node",
+  "summary": "Catalog and global item master node with inventory, IAM, browsing, and demand forecasting.",
+  "board": {
+    "project_id": "hapa-app-hapa-catalog-node",
+    "kanban_root": "/Users/calderwong/Documents/Codex/2026-05-27/can-you-generate-me-some-concept/hapa-overwatch-kanban",
+    "events": "data/hapa-app-hapa-catalog-node/events.ndjson"
+  },
+  "surfaces": [
+    "api",
+    "cli",
+    "web",
+    "desktop",
+    "tests"
+  ],
+  "source_truth": [
+    "Live source in this repo",
+    "README.md, AGENTS.md, docs, tests, and manifests",
+    "Overwatch Kanban append-only event log",
+    "Hapa Quest Keeper consolidated overview",
+    "Hapa Worldbuilding Wiki and Second Brain retrieval"
+  ]
+}
+

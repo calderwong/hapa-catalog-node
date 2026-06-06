@@ -1,0 +1,13 @@
+{
+  "source": "crm_order",
+  "schema_version": "connector-contract-v1",
+  "orders": [
+    {
+      "order_id": "CRM-ORDER-1",
+      "sku": "B095QX1FSR",
+      "quantity": 2,
+      "channel": "direct",
+      "ordered_at": "2026-06-05T00:00:00.000Z"
+    }
+  ]
+}

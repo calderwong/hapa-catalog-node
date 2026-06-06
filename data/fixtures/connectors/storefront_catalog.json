@@ -1,0 +1,13 @@
+{
+  "source": "storefront",
+  "schema_version": "connector-contract-v1",
+  "items": [
+    {
+      "sku": "B095QX1FSR",
+      "name": "Garmin Approach R10 Portable Golf Launch Monitor",
+      "brand": "Garmin",
+      "category": "Golf Swing Trainers",
+      "availability": "active"
+    }
+  ]
+}

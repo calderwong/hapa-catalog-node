@@ -1,0 +1,13 @@
+{
+  "source": "marketplace",
+  "schema_version": "connector-contract-v1",
+  "listing": {
+    "sku": "B095QX1FSR",
+    "asin": "B095QX1FSR",
+    "title": "Garmin Approach R10 Portable Golf Launch Monitor",
+    "price": 399.98,
+    "media": [
+      "https://m.media-amazon.com/images/I/61POLvv99xS._AC_SL1500_.jpg"
+    ]
+  }
+}

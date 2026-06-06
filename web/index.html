@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>.hapaCatalog</title>
+    <link rel="stylesheet" href="/web/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Hapa Protocol Node</p>
+          <h1>.hapaCatalog</h1>
+        </div>
+        <div class="status-strip">
+          <span id="healthDot" class="dot"></span>
+          <span id="healthText">checking</span>
+          <span id="skuCount" class="chip">0 SKUs</span>
+          <span id="forecastCount" class="chip">0 forecasts</span>
+          <span id="boardCount" class="chip">0 cards</span>
+          <span id="marketCount" class="chip">0 prices</span>
+        </div>
+      </header>
+
+      <section class="auth-row">
+        <label for="tokenInput">Bearer token</label>
+        <input id="tokenInput" type="password" autocomplete="off" placeholder="Paste local token" />
+        <button id="saveToken" aria-label="Save token">Save</button>
+        <button id="loadSample" aria-label="Load sample catalog">Import sample</button>
+        <button id="loadDemo" aria-label="Import 100 SKU demo catalog">Import 100 SKUs</button>
+        <button id="refresh" aria-label="Refresh data">Refresh</button>
+      </section>
+
+      <section class="workspace">
+        <aside class="sidebar">
+          <div class="panel">
+            <h2>Search</h2>
+            <input id="searchInput" type="search" placeholder="SKU, brand, category..." />
+            <div class="filter-grid" aria-label="Item filters">
+              <select id="categoryFilter" aria-label="Filter by category">
+                <option value="">All categories</option>
+              </select>
+              <select id="brandFilter" aria-label="Filter by brand">
+                <option value="">All brands</option>
+              </select>
+              <select id="statusFilter" aria-label="Filter by status">
+                <option value="">All states</option>
+              </select>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>Queues</h2>
+            <button class="nav" data-view="board">Board</button>
+            <button class="nav active" data-view="items">Items</button>
+            <button class="nav" data-view="inventory">Inventory</button>
+            <button class="nav" data-view="forecasts">Forecasts</button>
+            <button class="nav" data-view="market">Market</button>
+            <button class="nav" data-view="workbench">Workbench</button>
+            <button class="nav" data-view="quality">Quality</button>
+            <button class="nav" data-view="ops">Ops</button>
+            <button class="nav" data-view="governance">Governance</button>
+            <button class="nav" data-view="cards">Cards</button>
+            <button class="nav" data-view="audit">Audit</button>
+          </div>
+          <div class="panel">
+            <h2>Market lookup</h2>
+            <input id="marketLookupInput" type="search" placeholder="UPC, ASIN, or Camel URL" />
+            <button id="retrieveMarket" aria-label="Retrieve market prices">Retrieve</button>
+            <p id="marketStatus" class="micro-status">Idle</p>
+          </div>
+          <div class="panel" id="qualityPanel">
+            <h2>Readiness</h2>
+            <div class="meter"><span style="width: 72%"></span></div>
+            <p>Canonical graph, inventory, forecast, IAM, and audit surfaces are wired.</p>
+          </div>
+        </aside>
+
+        <section class="content">
+          <div class="list-panel">
+            <div class="panel-head">
+              <h2 id="listTitle">Item Master</h2>
+              <span id="listMeta" class="muted">No rows loaded</span>
+            </div>
+            <div id="list" class="list"></div>
+          </div>
+
+          <section class="inspector">
+            <div class="panel-head">
+              <h2>Inspector</h2>
+              <button id="runForecast" aria-label="Run forecast">Forecast</button>
+            </div>
+            <div id="inspectorBody" class="inspector-body">
+              <p class="empty">Select an item to inspect its product graph, inventory, provenance, and forecast signals.</p>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+    <script src="/web/app.js"></script>
+  </body>
+</html>

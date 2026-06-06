@@ -1,0 +1,5 @@
+product_group_id,sku,name,brand,category,gtin,supplier,supplier_sku,color,size,pack_level,units_per_pack,facility,location,on_hand,reserved,in_transit,safety_stock,reorder_point,sales_30d,lead_time_days,price,cost
+PG-ALPHA-RING,ALPHA-RING-9,Alpha Ring Size 9,Hapa Forge,wearables,0001112223331,Acme Supply,AC-AR-9,black,9,each,1,main,main-bin,42,5,12,10,18,36,14,89.00,32.00
+PG-ALPHA-RING,ALPHA-RING-10,Alpha Ring Size 10,Hapa Forge,wearables,0001112223332,Acme Supply,AC-AR-10,black,10,each,1,main,main-bin,30,2,10,10,18,28,14,89.00,32.00
+PG-LITO-KIT,LITO-CREATOR-KIT,LiTo Creator Kit,Hapa Lab,digital-physical,0001112224441,Node Works,NW-LITO-KIT,blue,kit,case,6,main,kit-rack,15,1,4,5,8,18,21,249.00,101.00
+

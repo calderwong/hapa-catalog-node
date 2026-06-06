@@ -1,0 +1,14 @@
+{
+  "source": "supplier_portal",
+  "schema_version": "connector-contract-v1",
+  "drafts": [
+    {
+      "sku": "SUP-2001",
+      "name": "Supplier Draft Item",
+      "brand": "Supplier Brand",
+      "category": "accessories",
+      "gtin": "2000000000001",
+      "supplier_sku": "SUP-DRAFT-2001"
+    }
+  ]
+}

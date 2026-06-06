@@ -1,0 +1,14 @@
+{
+  "source": "erp_plm",
+  "schema_version": "connector-contract-v1",
+  "records": [
+    {
+      "sku": "ERP-1001",
+      "name": "ERP Managed Item",
+      "brand": "Northstar",
+      "category": "hardware",
+      "gtin": "1000000000001",
+      "lifecycle": "active"
+    }
+  ]
+}

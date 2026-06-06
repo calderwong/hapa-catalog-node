@@ -1,0 +1,13 @@
+{
+  "source": "wms_3pl",
+  "schema_version": "connector-contract-v1",
+  "positions": [
+    {
+      "sku": "ERP-1001",
+      "facility": "3pl-west",
+      "location": "A-01",
+      "quantity": 42,
+      "reserved": 4
+    }
+  ]
+}

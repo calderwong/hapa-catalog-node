@@ -1,0 +1,101 @@
+product_group_id,sku,name,brand,category,gtin,supplier,supplier_sku,color,size,pack_level,units_per_pack,facility,location,on_hand,reserved,in_transit,safety_stock,reorder_point,sales_30d,lead_time_days,price,cost
+PG-DEMO-WEARABLES,DEMO-WEAR-001,Pulse Band 001,Hapa Forge,wearables,8800000000001,Acme Supply,AS-001,black,XS,each,1,main,main-bin-02,7,1,3,7,14,9,5,16.74,9.73
+PG-DEMO-ELECTRONICS,DEMO-ELEC-002,Beacon Hub 002,Signal Works,electronics,8800000000002,Node Works,NW-002,silver,S,each,1,west,west-bin-03,14,2,6,8,16,14,7,20.51,11.46
+PG-DEMO-OUTDOOR,DEMO-OUTD-003,Field Sensor 003,Trail Node,outdoor,8800000000003,Design Partner Demo,DPD-003,green,M,each,1,east,east-bin-04,21,3,9,9,18,19,9,24.53,13.19
+PG-DEMO-HOME,DEMO-HOME-004,Smart Shelf 004,Lumen House,home,8800000000004,Northstar Wholesale,NW-004,white,L,each,1,pilot,pilot-bin-05,28,4,12,10,20,24,11,28.80,14.92
+PG-DEMO-OFFICE,DEMO-OFFI-005,Desk Dock 005,Ledger Labs,office,8800000000005,Blue Mesa Distribution,BMD-005,graphite,XL,case,6,overflow,overflow-bin-06,35,5,15,11,22,29,13,33.30,16.65
+PG-DEMO-GROCERY,DEMO-GROC-006,Shelf Pack 006,Harvest Loop,grocery,8800000000006,ForgeLine Direct,FD-006,amber,kit,each,1,main,main-bin-07,42,6,18,12,24,34,15,38.05,18.38
+PG-DEMO-BEAUTY,DEMO-BEAU-007,Care Kit 007,Aura Studio,beauty,8800000000007,Pacific Trial Supply,PTS-007,rose,each,each,1,west,west-bin-08,49,7,21,13,26,39,17,33.18,20.11
+PG-DEMO-APPAREL,DEMO-APPA-008,Operator Tee 008,Thread Grid,apparel,8800000000008,Acme Supply,AS-008,navy,case,each,1,east,east-bin-09,56,8,24,14,28,44,19,37.56,21.84
+PG-DEMO-INDUSTRIAL,DEMO-INDU-009,Bin Tag 009,Anchor Supply,industrial,8800000000009,Node Works,NW-009,yellow,10,carton,12,pilot,pilot-bin-10,63,9,27,6,21,49,21,42.19,23.57
+PG-DEMO-TOY,DEMO-TOY-010,Builder Set 010,Play Circuit,toy,8800000000010,Design Partner Demo,DPD-010,multi,12,case,6,overflow,overflow-bin-11,70,10,2,7,23,54,23,47.06,25.30
+PG-DEMO-WEARABLES,DEMO-WEAR-011,Pulse Band 011,Hapa Forge,wearables,8800000000011,Northstar Wholesale,NW-011,black,XS,each,1,main,main-bin-12,77,0,5,8,25,59,25,52.17,27.03
+PG-DEMO-ELECTRONICS,DEMO-ELEC-012,Beacon Hub 012,Signal Works,electronics,8800000000012,Blue Mesa Distribution,BMD-012,silver,S,each,1,west,west-bin-13,84,1,8,9,27,64,27,57.52,28.76
+PG-DEMO-OUTDOOR,DEMO-OUTD-013,Field Sensor 013,Trail Node,outdoor,8800000000013,ForgeLine Direct,FD-013,green,M,each,1,east,east-bin-14,91,2,11,10,16,7,29,63.11,30.49
+PG-DEMO-HOME,DEMO-HOME-014,Smart Shelf 014,Lumen House,home,8800000000014,Pacific Trial Supply,PTS-014,white,L,each,1,pilot,pilot-bin-15,2,3,14,11,18,12,4,53.16,32.22
+PG-DEMO-OFFICE,DEMO-OFFI-015,Desk Dock 015,Ledger Labs,office,8800000000015,Acme Supply,AS-015,graphite,XL,case,6,overflow,overflow-bin-16,9,4,17,12,20,17,6,58.39,33.95
+PG-DEMO-GROCERY,DEMO-GROC-016,Shelf Pack 016,Harvest Loop,grocery,8800000000016,Node Works,NW-016,amber,kit,each,1,main,main-bin-17,16,5,20,13,22,22,8,63.87,35.68
+PG-DEMO-BEAUTY,DEMO-BEAU-017,Care Kit 017,Aura Studio,beauty,8800000000017,Design Partner Demo,DPD-017,rose,each,each,1,west,west-bin-18,23,6,23,14,24,27,10,69.58,37.41
+PG-DEMO-APPAREL,DEMO-APPA-018,Operator Tee 018,Thread Grid,apparel,8800000000018,Northstar Wholesale,NW-018,navy,case,carton,12,east,east-bin-19,30,7,26,6,17,32,12,75.54,39.14
+PG-DEMO-INDUSTRIAL,DEMO-INDU-019,Bin Tag 019,Anchor Supply,industrial,8800000000019,Blue Mesa Distribution,BMD-019,yellow,10,each,1,pilot,pilot-bin-20,37,8,1,7,19,37,14,81.74,40.87
+PG-DEMO-TOY,DEMO-TOY-020,Builder Set 020,Play Circuit,toy,8800000000020,ForgeLine Direct,FD-020,multi,12,case,6,overflow,overflow-bin-21,44,9,4,8,21,42,16,88.18,42.60
+PG-DEMO-WEARABLES,DEMO-WEAR-021,Pulse Band 021,Hapa Forge,wearables,8800000000021,Pacific Trial Supply,PTS-021,black,XS,each,1,main,main-bin-22,51,10,7,9,23,47,18,73.14,44.33
+PG-DEMO-ELECTRONICS,DEMO-ELEC-022,Beacon Hub 022,Signal Works,electronics,8800000000022,Acme Supply,AS-022,silver,S,each,1,west,west-bin-23,58,0,10,10,25,52,20,79.22,46.06
+PG-DEMO-OUTDOOR,DEMO-OUTD-023,Field Sensor 023,Trail Node,outdoor,8800000000023,Node Works,NW-023,green,M,each,1,east,east-bin-24,65,1,13,11,27,57,22,85.54,47.79
+PG-DEMO-HOME,DEMO-HOME-024,Smart Shelf 024,Lumen House,home,8800000000024,Design Partner Demo,DPD-024,white,L,each,1,pilot,pilot-bin-01,72,2,16,12,29,62,24,92.11,49.52
+PG-DEMO-OFFICE,DEMO-OFFI-025,Desk Dock 025,Ledger Labs,office,8800000000025,Northstar Wholesale,NW-025,graphite,XL,case,6,overflow,overflow-bin-02,79,3,19,13,31,5,26,98.91,51.25
+PG-DEMO-GROCERY,DEMO-GROC-026,Shelf Pack 026,Harvest Loop,grocery,8800000000026,Blue Mesa Distribution,BMD-026,amber,kit,each,1,main,main-bin-03,86,4,22,14,20,10,28,105.96,52.98
+PG-DEMO-BEAUTY,DEMO-BEAU-027,Care Kit 027,Aura Studio,beauty,8800000000027,ForgeLine Direct,FD-027,rose,each,carton,12,west,west-bin-04,93,5,25,6,13,15,3,113.25,54.71
+PG-DEMO-APPAREL,DEMO-APPA-028,Operator Tee 028,Thread Grid,apparel,8800000000028,Pacific Trial Supply,PTS-028,navy,case,each,1,east,east-bin-05,4,6,0,7,15,20,5,93.13,56.44
+PG-DEMO-INDUSTRIAL,DEMO-INDU-029,Bin Tag 029,Anchor Supply,industrial,8800000000029,Acme Supply,AS-029,yellow,10,each,1,pilot,pilot-bin-06,11,7,3,8,17,25,7,100.05,58.17
+PG-DEMO-TOY,DEMO-TOY-030,Builder Set 030,Play Circuit,toy,8800000000030,Node Works,NW-030,multi,12,case,6,overflow,overflow-bin-07,18,8,6,9,19,30,9,107.22,59.90
+PG-DEMO-WEARABLES,DEMO-WEAR-031,Pulse Band 031,Hapa Forge,wearables,8800000000031,Design Partner Demo,DPD-031,black,XS,each,1,main,main-bin-08,25,9,9,10,21,35,11,114.63,61.63
+PG-DEMO-ELECTRONICS,DEMO-ELEC-032,Beacon Hub 032,Signal Works,electronics,8800000000032,Northstar Wholesale,NW-032,silver,S,each,1,west,west-bin-09,32,10,12,11,23,40,13,122.28,63.36
+PG-DEMO-OUTDOOR,DEMO-OUTD-033,Field Sensor 033,Trail Node,outdoor,8800000000033,Blue Mesa Distribution,BMD-033,green,M,each,1,east,east-bin-10,39,0,15,12,25,45,15,130.18,65.09
+PG-DEMO-HOME,DEMO-HOME-034,Smart Shelf 034,Lumen House,home,8800000000034,ForgeLine Direct,FD-034,white,L,each,1,pilot,pilot-bin-11,46,1,18,13,27,50,17,138.32,66.82
+PG-DEMO-OFFICE,DEMO-OFFI-035,Desk Dock 035,Ledger Labs,office,8800000000035,Pacific Trial Supply,PTS-035,graphite,XL,case,6,overflow,overflow-bin-12,53,2,21,14,29,55,19,113.11,68.55
+PG-DEMO-GROCERY,DEMO-GROC-036,Shelf Pack 036,Harvest Loop,grocery,8800000000036,Acme Supply,AS-036,amber,kit,carton,12,main,main-bin-13,60,3,24,6,22,60,21,120.88,70.28
+PG-DEMO-BEAUTY,DEMO-BEAU-037,Care Kit 037,Aura Studio,beauty,8800000000037,Node Works,NW-037,rose,each,each,1,west,west-bin-14,67,4,27,7,24,65,23,128.90,72.01
+PG-DEMO-APPAREL,DEMO-APPA-038,Operator Tee 038,Thread Grid,apparel,8800000000038,Design Partner Demo,DPD-038,navy,case,each,1,east,east-bin-15,74,5,2,8,26,8,25,137.16,73.74
+PG-DEMO-INDUSTRIAL,DEMO-INDU-039,Bin Tag 039,Anchor Supply,industrial,8800000000039,Northstar Wholesale,NW-039,yellow,10,each,1,pilot,pilot-bin-16,81,6,5,9,15,13,27,145.66,75.47
+PG-DEMO-TOY,DEMO-TOY-040,Builder Set 040,Play Circuit,toy,8800000000040,Blue Mesa Distribution,BMD-040,multi,12,case,6,overflow,overflow-bin-17,88,7,8,10,17,18,29,154.40,77.20
+PG-DEMO-WEARABLES,DEMO-WEAR-041,Pulse Band 041,Hapa Forge,wearables,8800000000041,ForgeLine Direct,FD-041,black,XS,each,1,main,main-bin-18,95,8,11,11,19,23,4,163.39,78.93
+PG-DEMO-ELECTRONICS,DEMO-ELEC-042,Beacon Hub 042,Signal Works,electronics,8800000000042,Pacific Trial Supply,PTS-042,silver,S,each,1,west,west-bin-19,6,9,14,12,21,28,6,133.09,80.66
+PG-DEMO-OUTDOOR,DEMO-OUTD-043,Field Sensor 043,Trail Node,outdoor,8800000000043,Acme Supply,AS-043,green,M,each,1,east,east-bin-20,13,10,17,13,23,33,8,141.71,82.39
+PG-DEMO-HOME,DEMO-HOME-044,Smart Shelf 044,Lumen House,home,8800000000044,Node Works,NW-044,white,L,each,1,pilot,pilot-bin-21,20,0,20,14,25,38,10,150.57,84.12
+PG-DEMO-OFFICE,DEMO-OFFI-045,Desk Dock 045,Ledger Labs,office,8800000000045,Design Partner Demo,DPD-045,graphite,XL,carton,12,overflow,overflow-bin-22,27,1,23,6,18,43,12,159.68,85.85
+PG-DEMO-GROCERY,DEMO-GROC-046,Shelf Pack 046,Harvest Loop,grocery,8800000000046,Northstar Wholesale,NW-046,amber,kit,each,1,main,main-bin-23,34,2,26,7,20,48,14,169.03,87.58
+PG-DEMO-BEAUTY,DEMO-BEAU-047,Care Kit 047,Aura Studio,beauty,8800000000047,Blue Mesa Distribution,BMD-047,rose,each,each,1,west,west-bin-24,41,3,1,8,22,53,16,178.62,89.31
+PG-DEMO-APPAREL,DEMO-APPA-048,Operator Tee 048,Thread Grid,apparel,8800000000048,ForgeLine Direct,FD-048,navy,case,each,1,east,east-bin-01,48,4,4,9,24,58,18,188.45,91.04
+PG-DEMO-INDUSTRIAL,DEMO-INDU-049,Bin Tag 049,Anchor Supply,industrial,8800000000049,Pacific Trial Supply,PTS-049,yellow,10,each,1,pilot,pilot-bin-02,55,5,7,10,26,63,20,153.07,92.77
+PG-DEMO-TOY,DEMO-TOY-050,Builder Set 050,Play Circuit,toy,8800000000050,Acme Supply,AS-050,multi,12,case,6,overflow,overflow-bin-03,62,6,10,11,28,6,22,162.54,94.50
+PG-DEMO-WEARABLES,DEMO-WEAR-051,Pulse Band 051,Hapa Forge,wearables,8800000000051,Node Works,NW-051,black,XS,each,1,main,main-bin-04,69,7,13,12,30,11,24,172.25,96.23
+PG-DEMO-ELECTRONICS,DEMO-ELEC-052,Beacon Hub 052,Signal Works,electronics,8800000000052,Design Partner Demo,DPD-052,silver,S,each,1,west,west-bin-05,76,8,16,13,19,16,26,182.21,97.96
+PG-DEMO-OUTDOOR,DEMO-OUTD-053,Field Sensor 053,Trail Node,outdoor,8800000000053,Northstar Wholesale,NW-053,green,M,each,1,east,east-bin-06,83,9,19,14,21,21,28,192.40,99.69
+PG-DEMO-HOME,DEMO-HOME-054,Smart Shelf 054,Lumen House,home,8800000000054,Blue Mesa Distribution,BMD-054,white,L,carton,12,pilot,pilot-bin-07,90,10,22,6,14,26,3,202.84,101.42
+PG-DEMO-OFFICE,DEMO-OFFI-055,Desk Dock 055,Ledger Labs,office,8800000000055,ForgeLine Direct,FD-055,graphite,XL,case,6,overflow,overflow-bin-08,1,0,25,7,16,31,5,16.87,8.15
+PG-DEMO-GROCERY,DEMO-GROC-056,Shelf Pack 056,Harvest Loop,grocery,8800000000056,Pacific Trial Supply,PTS-056,amber,kit,each,1,main,main-bin-09,8,1,0,8,18,36,7,16.30,9.88
+PG-DEMO-BEAUTY,DEMO-BEAU-057,Care Kit 057,Aura Studio,beauty,8800000000057,Acme Supply,AS-057,rose,each,each,1,west,west-bin-10,15,2,3,9,20,41,9,19.97,11.61
+PG-DEMO-APPAREL,DEMO-APPA-058,Operator Tee 058,Thread Grid,apparel,8800000000058,Node Works,NW-058,navy,case,each,1,east,east-bin-11,22,3,6,10,22,46,11,23.88,13.34
+PG-DEMO-INDUSTRIAL,DEMO-INDU-059,Bin Tag 059,Anchor Supply,industrial,8800000000059,Design Partner Demo,DPD-059,yellow,10,each,1,pilot,pilot-bin-12,29,4,9,11,24,51,13,28.03,15.07
+PG-DEMO-TOY,DEMO-TOY-060,Builder Set 060,Play Circuit,toy,8800000000060,Northstar Wholesale,NW-060,multi,12,case,6,overflow,overflow-bin-13,36,5,12,12,26,56,15,32.42,16.80
+PG-DEMO-WEARABLES,DEMO-WEAR-061,Pulse Band 061,Hapa Forge,wearables,8800000000061,Blue Mesa Distribution,BMD-061,black,XS,each,1,main,main-bin-14,43,6,15,13,28,61,17,37.06,18.53
+PG-DEMO-ELECTRONICS,DEMO-ELEC-062,Beacon Hub 062,Signal Works,electronics,8800000000062,ForgeLine Direct,FD-062,silver,S,each,1,west,west-bin-15,50,7,18,14,30,4,19,41.94,20.26
+PG-DEMO-OUTDOOR,DEMO-OUTD-063,Field Sensor 063,Trail Node,outdoor,8800000000063,Pacific Trial Supply,PTS-063,green,M,carton,12,east,east-bin-16,57,8,21,6,23,9,21,36.28,21.99
+PG-DEMO-HOME,DEMO-HOME-064,Smart Shelf 064,Lumen House,home,8800000000064,Acme Supply,AS-064,white,L,each,1,pilot,pilot-bin-17,64,9,24,7,25,14,23,40.80,23.72
+PG-DEMO-OFFICE,DEMO-OFFI-065,Desk Dock 065,Ledger Labs,office,8800000000065,Node Works,NW-065,graphite,XL,case,6,overflow,overflow-bin-18,71,10,27,8,14,19,25,45.56,25.45
+PG-DEMO-GROCERY,DEMO-GROC-066,Shelf Pack 066,Harvest Loop,grocery,8800000000066,Design Partner Demo,DPD-066,amber,kit,each,1,main,main-bin-19,78,0,2,9,16,24,27,50.55,27.18
+PG-DEMO-BEAUTY,DEMO-BEAU-067,Care Kit 067,Aura Studio,beauty,8800000000067,Northstar Wholesale,NW-067,rose,each,each,1,west,west-bin-20,85,1,5,10,18,29,29,55.80,28.91
+PG-DEMO-APPAREL,DEMO-APPA-068,Operator Tee 068,Thread Grid,apparel,8800000000068,Blue Mesa Distribution,BMD-068,navy,case,each,1,east,east-bin-21,92,2,8,11,20,34,4,61.28,30.64
+PG-DEMO-INDUSTRIAL,DEMO-INDU-069,Bin Tag 069,Anchor Supply,industrial,8800000000069,ForgeLine Direct,FD-069,yellow,10,each,1,pilot,pilot-bin-22,3,3,11,12,22,39,6,67.01,32.37
+PG-DEMO-TOY,DEMO-TOY-070,Builder Set 070,Play Circuit,toy,8800000000070,Pacific Trial Supply,PTS-070,multi,12,case,6,overflow,overflow-bin-23,10,4,14,13,24,44,8,56.26,34.10
+PG-DEMO-WEARABLES,DEMO-WEAR-071,Pulse Band 071,Hapa Forge,wearables,8800000000071,Acme Supply,AS-071,black,XS,each,1,main,main-bin-24,17,5,17,14,26,49,10,61.63,35.83
+PG-DEMO-ELECTRONICS,DEMO-ELEC-072,Beacon Hub 072,Signal Works,electronics,8800000000072,Node Works,NW-072,silver,S,carton,12,west,west-bin-01,24,6,20,6,19,54,12,67.23,37.56
+PG-DEMO-OUTDOOR,DEMO-OUTD-073,Field Sensor 073,Trail Node,outdoor,8800000000073,Design Partner Demo,DPD-073,green,M,each,1,east,east-bin-02,31,7,23,7,21,59,14,73.08,39.29
+PG-DEMO-HOME,DEMO-HOME-074,Smart Shelf 074,Lumen House,home,8800000000074,Northstar Wholesale,NW-074,white,L,each,1,pilot,pilot-bin-03,38,8,26,8,23,64,16,79.17,41.02
+PG-DEMO-OFFICE,DEMO-OFFI-075,Desk Dock 075,Ledger Labs,office,8800000000075,Blue Mesa Distribution,BMD-075,graphite,XL,case,6,overflow,overflow-bin-04,45,9,1,9,25,7,18,85.50,42.75
+PG-DEMO-GROCERY,DEMO-GROC-076,Shelf Pack 076,Harvest Loop,grocery,8800000000076,ForgeLine Direct,FD-076,amber,kit,each,1,main,main-bin-05,52,10,4,10,27,12,20,92.07,44.48
+PG-DEMO-BEAUTY,DEMO-BEAU-077,Care Kit 077,Aura Studio,beauty,8800000000077,Pacific Trial Supply,PTS-077,rose,each,each,1,west,west-bin-06,59,0,7,11,29,17,22,76.25,46.21
+PG-DEMO-APPAREL,DEMO-APPA-078,Operator Tee 078,Thread Grid,apparel,8800000000078,Acme Supply,AS-078,navy,case,each,1,east,east-bin-07,66,1,10,12,18,22,24,82.46,47.94
+PG-DEMO-INDUSTRIAL,DEMO-INDU-079,Bin Tag 079,Anchor Supply,industrial,8800000000079,Node Works,NW-079,yellow,10,each,1,pilot,pilot-bin-08,73,2,13,13,20,27,26,88.91,49.67
+PG-DEMO-TOY,DEMO-TOY-080,Builder Set 080,Play Circuit,toy,8800000000080,Design Partner Demo,DPD-080,multi,12,case,6,overflow,overflow-bin-09,80,3,16,14,22,32,28,95.60,51.40
+PG-DEMO-WEARABLES,DEMO-WEAR-081,Pulse Band 081,Hapa Forge,wearables,8800000000081,Northstar Wholesale,NW-081,black,XS,carton,12,main,main-bin-10,87,4,19,6,15,37,3,102.54,53.13
+PG-DEMO-ELECTRONICS,DEMO-ELEC-082,Beacon Hub 082,Signal Works,electronics,8800000000082,Blue Mesa Distribution,BMD-082,silver,S,each,1,west,west-bin-11,94,5,22,7,17,42,5,109.72,54.86
+PG-DEMO-OUTDOOR,DEMO-OUTD-083,Field Sensor 083,Trail Node,outdoor,8800000000083,ForgeLine Direct,FD-083,green,M,each,1,east,east-bin-12,5,6,25,8,19,47,7,117.14,56.59
+PG-DEMO-HOME,DEMO-HOME-084,Smart Shelf 084,Lumen House,home,8800000000084,Pacific Trial Supply,PTS-084,white,L,each,1,pilot,pilot-bin-13,12,7,0,9,21,52,9,96.23,58.32
+PG-DEMO-OFFICE,DEMO-OFFI-085,Desk Dock 085,Ledger Labs,office,8800000000085,Acme Supply,AS-085,graphite,XL,case,6,overflow,overflow-bin-14,19,8,3,10,23,57,11,103.29,60.05
+PG-DEMO-GROCERY,DEMO-GROC-086,Shelf Pack 086,Harvest Loop,grocery,8800000000086,Node Works,NW-086,amber,kit,each,1,main,main-bin-15,26,9,6,11,25,62,13,110.59,61.78
+PG-DEMO-BEAUTY,DEMO-BEAU-087,Care Kit 087,Aura Studio,beauty,8800000000087,Design Partner Demo,DPD-087,rose,each,each,1,west,west-bin-16,33,10,9,12,27,5,15,118.13,63.51
+PG-DEMO-APPAREL,DEMO-APPA-088,Operator Tee 088,Thread Grid,apparel,8800000000088,Northstar Wholesale,NW-088,navy,case,each,1,east,east-bin-17,40,0,12,13,29,10,17,125.91,65.24
+PG-DEMO-INDUSTRIAL,DEMO-INDU-089,Bin Tag 089,Anchor Supply,industrial,8800000000089,Blue Mesa Distribution,BMD-089,yellow,10,each,1,pilot,pilot-bin-18,47,1,15,14,31,15,19,133.94,66.97
+PG-DEMO-TOY,DEMO-TOY-090,Builder Set 090,Play Circuit,toy,8800000000090,ForgeLine Direct,FD-090,multi,12,carton,12,overflow,overflow-bin-19,54,2,18,6,24,20,21,142.21,68.70
+PG-DEMO-WEARABLES,DEMO-WEAR-091,Pulse Band 091,Hapa Forge,wearables,8800000000091,Pacific Trial Supply,PTS-091,black,XS,each,1,main,main-bin-20,61,3,21,7,13,25,23,116.21,70.43
+PG-DEMO-ELECTRONICS,DEMO-ELEC-092,Beacon Hub 092,Signal Works,electronics,8800000000092,Acme Supply,AS-092,silver,S,each,1,west,west-bin-21,68,4,24,8,15,30,25,124.12,72.16
+PG-DEMO-OUTDOOR,DEMO-OUTD-093,Field Sensor 093,Trail Node,outdoor,8800000000093,Node Works,NW-093,green,M,each,1,east,east-bin-22,75,5,27,9,17,35,27,132.26,73.89
+PG-DEMO-HOME,DEMO-HOME-094,Smart Shelf 094,Lumen House,home,8800000000094,Design Partner Demo,DPD-094,white,L,each,1,pilot,pilot-bin-23,82,6,2,10,19,40,29,140.65,75.62
+PG-DEMO-OFFICE,DEMO-OFFI-095,Desk Dock 095,Ledger Labs,office,8800000000095,Northstar Wholesale,NW-095,graphite,XL,case,6,overflow,overflow-bin-24,89,7,5,11,21,45,4,149.29,77.35
+PG-DEMO-GROCERY,DEMO-GROC-096,Shelf Pack 096,Harvest Loop,grocery,8800000000096,Blue Mesa Distribution,BMD-096,amber,kit,each,1,main,main-bin-01,0,8,8,12,23,50,6,158.16,79.08
+PG-DEMO-BEAUTY,DEMO-BEAU-097,Care Kit 097,Aura Studio,beauty,8800000000097,ForgeLine Direct,FD-097,rose,each,each,1,west,west-bin-02,7,9,11,13,25,55,8,167.28,80.81
+PG-DEMO-APPAREL,DEMO-APPA-098,Operator Tee 098,Thread Grid,apparel,8800000000098,Pacific Trial Supply,PTS-098,navy,case,each,1,east,east-bin-03,14,10,14,14,27,60,10,136.19,82.54
+PG-DEMO-INDUSTRIAL,DEMO-INDU-099,Bin Tag 099,Anchor Supply,industrial,8800000000099,Acme Supply,AS-099,yellow,10,carton,12,pilot,pilot-bin-04,21,0,17,6,20,65,12,144.94,84.27
+PG-DEMO-TOY,DEMO-TOY-100,Builder Set 100,Play Circuit,toy,8800000000100,Node Works,NW-100,multi,12,case,6,overflow,overflow-bin-05,28,1,20,7,22,8,14,153.94,86.00

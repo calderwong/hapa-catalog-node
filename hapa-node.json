@@ -1,0 +1,55 @@
+{
+  "node_type": "hapa-catalog-node",
+  "node_id": "hapa-catalog-node",
+  "display_name": ".hapaCatalog",
+  "description": "Local-first Hapa protocol node for catalog ingestion, global item master, inventory, identity/permissions, browse/search, and explainable demand forecasting.",
+  "default_port": 8768,
+  "auth_type": "loopback_bearer",
+  "launch_config": {
+    "command": "node src/server.mjs",
+    "cwd": "${HAPA_CATALOG_ROOT:-.}"
+  },
+  "requirements": {
+    "node": ">=25.0.0",
+    "sqlite": "node:sqlite experimental built-in"
+  },
+  "endpoints": {
+    "health": "/health",
+    "capabilities": "/capabilities",
+    "summary": "/v1/summary",
+    "items": "/v1/items",
+    "import_batches": "/v1/import-batches",
+    "import_mappings": "/v1/import-mappings",
+    "import_mapping_preview": "/v1/import-mappings/preview",
+    "digital_products": "/v1/digital-products",
+    "inventory": "/v1/inventory/positions",
+    "forecasts": "/v1/forecasts/runs",
+    "forecast_actuals": "/v1/forecasts/actuals",
+    "forecast_quality": "/v1/forecasts/quality",
+    "mdm_duplicates": "/v1/mdm/duplicates",
+    "mdm_detect_duplicates": "/v1/mdm/detect-duplicates",
+    "mdm_merge": "/v1/mdm/merge",
+    "identities": "/v1/identities",
+    "roles": "/v1/roles",
+    "audit": "/v1/audit-events",
+    "telemetry": "/v1/telemetry",
+    "kanban_board": "/v1/kanban-board",
+    "identifier_resolve": "/v1/identifiers/resolve",
+    "market_prices": "/v1/market/prices",
+    "market_retrieve": "/v1/market/retrieve",
+    "market_listing": "/v1/market/listing",
+    "market_amazon_listing_retrieve": "/v1/market/amazon-listing/retrieve",
+    "connector_contracts": "/v1/connectors/contracts",
+    "connector_validate": "/v1/connectors/validate",
+    "performance_reports": "/v1/performance/reports",
+    "docs": "/v1/docs"
+  },
+  "parity": {
+    "api": true,
+    "cli": true,
+    "web": true,
+    "desktop": true,
+    "tests": true,
+    "kanban": true
+  }
+}

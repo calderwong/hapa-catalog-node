@@ -1,0 +1,16 @@
+[
+  {
+    "supplier_item": "SUP-ALPHA-9",
+    "description": "Alpha Ring Size 9",
+    "brand_name": "Northstar",
+    "dept": "jewelry",
+    "barcode": "0001112223331",
+    "supplier_name": "Supplier Portal Demo",
+    "uom": "case",
+    "case_qty": "12",
+    "weight_oz": "32",
+    "warehouse": "main",
+    "bin": "A-01",
+    "qty": "24"
+  }
+]

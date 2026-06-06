@@ -1,0 +1,12 @@
+.DS_Store
+.node_token
+node_modules/
+artifacts/runtime/
+artifacts/self_test/
+data/*.db
+data/*.db-*
+data/*.log
+data/imports/
+data/projections/
+dist/
+*.log

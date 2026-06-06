@@ -1,0 +1,31 @@
+{
+  "name": "hapa-catalog-node",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Hapa-compatible local-first catalog, item master, inventory, identity, and demand forecasting node.",
+  "bin": {
+    "hapa-catalog": "./bin/hapa-catalog.mjs"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "api": "node src/server.mjs",
+    "cli": "node bin/hapa-catalog.mjs",
+    "health": "node bin/hapa-catalog.mjs health",
+    "capabilities": "node bin/hapa-catalog.mjs capabilities",
+    "self-test": "NODE_NO_WARNINGS=1 node --test",
+    "test": "NODE_NO_WARNINGS=1 node --test",
+    "performance:smoke": "node scripts/performance-smoke.mjs",
+    "web:e2e": "node scripts/web-e2e-smoke.mjs",
+    "pages:build": "node scripts/build-pages-demo.mjs",
+    "pages:smoke": "node scripts/pages-smoke.mjs",
+    "desktop": "electron electron/main.cjs",
+    "desktop:smoke": "node scripts/desktop-smoke.mjs"
+  },
+  "engines": {
+    "node": ">=25.0.0"
+  },
+  "devDependencies": {
+    "electron": "^42.3.0"
+  }
+}
