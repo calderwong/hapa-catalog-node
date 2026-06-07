@@ -157,11 +157,42 @@ function buildForecastDashboards() {
   ]));
 }
 
+function enrichItemMasterProjection(item, marketListing) {
+  if (!item) return item;
+  const matchesSku = row => row.sku === item.sku || row.sku_id === item.sku_id || row.asin === item.identifiers?.asin;
+  const globalListings = (marketListing.listings || []).filter(matchesSku);
+  const globalMedia = (marketListing.media || []).filter(matchesSku);
+  return {
+    ...item,
+    market_listing: {
+      ...(item.market_listing || {}),
+      snapshots: dedupeBy([...(item.market_listing?.snapshots || []), ...globalListings], row => row.id || `${row.source}:${row.asin}:${row.created_at}`),
+      media: dedupeBy([...(item.market_listing?.media || []), ...globalMedia], row => `${row.media_type}:${row.variant}:${row.url}`)
+    }
+  };
+}
+
+function dedupeBy(items, keyFn) {
+  const seen = new Set();
+  return items.filter(item => {
+    const key = keyFn(item);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 const items = core.listItems({ limit: 120 }).items;
-const selectedItem = items[0] ? core.getItem(items[0].sku).item : null;
-const demoFixture = core.demoCatalogRecords({ limit: 100 });
 const marketPrices = core.marketPrices({ limit: 120 });
 const marketListing = core.marketListingData({ limit: 120 });
+const itemMaster = items
+  .map(item => core.getItem(item.sku).item)
+  .map(item => enrichItemMasterProjection(item, marketListing))
+  .filter(Boolean);
+const selectedItem = itemMaster.find(item => item.market_listing?.media?.length || item.identifiers?.asin)
+  || itemMaster[0]
+  || null;
+const demoFixture = core.demoCatalogRecords({ limit: 100 });
 const forecastDashboards = buildForecastDashboards();
 const forecastDashboard = forecastDashboards.weeks.category;
 const forecastExperimentation = core.forecastExperimentation({ granularity: 'category', increment: 'weeks' });
@@ -194,6 +225,7 @@ const payload = sanitize({
     web_controls: core.webControlCatalog()
   },
   items,
+  item_master: itemMaster,
   selected_item: selectedItem,
   inventory: core.inventory({ limit: 120 }).positions,
   forecast_runs: core.store.listForecastRuns().slice(0, 40),

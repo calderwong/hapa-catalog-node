@@ -13,7 +13,7 @@ const state = {
   forecastOverrides: []
 };
 
-const ASSET_VERSION = '20260607-cards-v6';
+const ASSET_VERSION = '20260607-item-master-v8';
 const VIEWS = ['items', 'board', 'cards', 'forecast', 'ops', 'docs'];
 const FORECAST_OVERRIDE_STORAGE_KEY = 'hapaCatalogForecastOverrides:v1';
 const FORECAST_INCREMENTS = [
@@ -57,7 +57,7 @@ async function init() {
   if (!VIEWS.includes(state.view)) state.view = 'items';
   demo = await fetch(`demo-data.json?v=${ASSET_VERSION}`).then(response => response.json());
   state.forecastOverrides = loadForecastOverrides();
-  state.selectedSku = demo.items[0]?.sku || '';
+  state.selectedSku = demo.selected_item?.sku || displayItems().find(itemHasMarketFidelity)?.sku || demo.items[0]?.sku || '';
   state.selectedCardId = demo.hapa.cards[0]?.id || '';
   els.githubLink.href = demo.repo.github_url;
   els.generatedAt.textContent = `Generated ${new Date(demo.generated_at).toLocaleString()}`;
@@ -129,25 +129,20 @@ function render() {
 
 function renderItems() {
   const rows = filteredItems();
+  const allItems = displayItems();
+  const enrichedItems = allItems.filter(itemHasMarketFidelity);
   els.listTitle.textContent = 'Item Master';
-  els.listMeta.textContent = `${rows.length} of ${demo.items.length} rows`;
-  els.list.className = 'list';
+  els.listMeta.textContent = `${rows.length} of ${allItems.length} rows / ${enrichedItems.length} enriched`;
+  els.list.className = 'list item-master';
   els.list.innerHTML = [
     telemetry([
       ['Rows', rows.length],
       ['Categories', new Set(rows.map(item => item.category).filter(Boolean)).size],
       ['Brands', new Set(rows.map(item => item.brand).filter(Boolean)).size],
-      ['States', new Set(rows.map(item => item.status).filter(Boolean)).size]
+      ['Enriched', enrichedItems.length]
     ]),
-    ...rows.map(item => `
-      <article class="row ${item.sku === state.selectedSku ? 'selected' : ''}" data-sku="${escapeAttribute(item.sku)}" role="button" tabindex="0">
-        <div>
-          <strong>${escapeHtml(item.sku)}</strong>
-          <small>${escapeHtml(item.sku_name)} / ${escapeHtml(item.brand || '')} / ${escapeHtml(item.category || '')}</small>
-        </div>
-        <span class="badge">${escapeHtml(item.status)}</span>
-      </article>
-    `)
+    renderEnrichedItemCallout(enrichedItems[0]),
+    ...rows.map(item => renderItemRow(item))
   ].join('') || '<p class="empty">No matching items.</p>';
   els.list.querySelectorAll('[data-sku]').forEach(row => {
     row.addEventListener('click', () => {
@@ -162,17 +157,67 @@ function renderItems() {
       }
     });
   });
-  const selected = demo.items.find(item => item.sku === state.selectedSku) || rows[0] || demo.items[0];
+  const selected = displayItems().find(item => item.sku === state.selectedSku) || rows[0] || allItems[0];
   renderItemInspector(selected);
 }
 
+function displayItems() {
+  return demo?.item_master?.length ? demo.item_master : demo.items || [];
+}
+
 function filteredItems() {
-  return demo.items.filter(item => (
+  return displayItems().filter(item => (
     (!state.category || item.category === state.category)
     && (!state.brand || item.brand === state.brand)
     && (!state.status || item.status === state.status)
-    && [item.sku, item.sku_name, item.brand, item.category, item.status].join(' ').toLowerCase().includes(state.query)
+    && itemSearchText(item).includes(state.query)
   ));
+}
+
+function renderEnrichedItemCallout(item) {
+  if (!item) return '';
+  const media = mediaForItem(item);
+  const listing = latestListingForItem(item);
+  const primary = primaryMediaForItem(item);
+  return `
+    <article class="item-enrichment-callout" data-sku="${escapeAttribute(item.sku)}" role="button" tabindex="0">
+      ${primary ? `<img src="${escapeAttribute(primary.url)}" alt="${escapeAttribute(primary.alt || item.sku_name)}" loading="lazy" referrerpolicy="no-referrer" />` : '<div class="item-thumb-placeholder">ASIN</div>'}
+      <div>
+        <span class="micro-label">High Fidelity Item Master Record</span>
+        <h3>${escapeHtml(item.sku_name)}</h3>
+        <p>${escapeHtml(item.sku)} / ASIN ${escapeHtml(item.identifiers?.asin || 'n/a')} / UPC ${escapeHtml(item.identifiers?.upc || item.identifiers?.gtin || 'n/a')}</p>
+        <div class="item-row-meta">
+          <span>${escapeHtml(media.length)} media assets</span>
+          <span>${escapeHtml(identifierPairs(item).length)} identifiers</span>
+          <span>${escapeHtml(listing?.availability || 'listing snapshot')}</span>
+          <span>${formatCurrency(listing?.price || item.price, listing?.currency)}</span>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderItemRow(item) {
+  const primary = primaryMediaForItem(item);
+  const mediaCount = mediaForItem(item).length;
+  const listing = latestListingForItem(item);
+  const identifierSummary = identifierPairs(item).slice(0, 4);
+  return `
+    <article class="row item-row ${item.sku === state.selectedSku ? 'selected' : ''}" data-sku="${escapeAttribute(item.sku)}" role="button" tabindex="0">
+      ${primary ? `<img class="item-row-thumb" src="${escapeAttribute(primary.url)}" alt="${escapeAttribute(primary.alt || item.sku_name)}" loading="lazy" referrerpolicy="no-referrer" />` : '<div class="item-row-thumb item-thumb-placeholder">SKU</div>'}
+      <div class="item-row-main">
+        <strong>${escapeHtml(item.sku)}</strong>
+        <small>${escapeHtml(item.sku_name)} / ${escapeHtml(item.brand || '')} / ${escapeHtml(item.category || '')}</small>
+        <div class="identifier-chip-row">
+          ${identifierSummary.map(([key, value]) => `<span>${escapeHtml(key)}: ${escapeHtml(value)}</span>`).join('') || '<span>No identifiers</span>'}
+        </div>
+      </div>
+      <div class="item-row-side">
+        <span class="badge">${escapeHtml(item.status)}</span>
+        <small>${mediaCount ? `${mediaCount} media` : 'no media'} / ${listing ? 'listing' : 'catalog'}</small>
+      </div>
+    </article>
+  `;
 }
 
 function renderItemInspector(item) {
@@ -180,21 +225,208 @@ function renderItemInspector(item) {
     els.inspectorBody.innerHTML = '<p class="empty">No item selected.</p>';
     return;
   }
-  const positions = demo.inventory.filter(position => position.sku === item.sku).slice(0, 4);
+  const positions = (item.inventory?.length ? item.inventory : demo.inventory.filter(position => position.sku === item.sku)).slice(0, 4);
+  const media = mediaForItem(item);
+  const primary = primaryMediaForItem(item);
+  const documents = media.filter(asset => asset.media_type === 'document' || /\.pdf(?:$|\?)/i.test(asset.url || ''));
+  const listing = latestListingForItem(item);
+  const identifiers = identifierPairs(item);
+  const normalizedIdentifiers = item.normalized_identifiers || [];
+  const marketSnapshots = marketSnapshotsForItem(item);
+  const pricePoints = marketPointsForItem(item);
+  const amazonListing = item.product_attributes?.amazon_listing || {};
+  const listingDetails = amazonListing.details || {};
   els.inspectorBadge.textContent = item.status;
   els.inspectorBody.innerHTML = `
+    <div class="item-inspector-hero">
+      ${primary ? `<img src="${escapeAttribute(primary.url)}" alt="${escapeAttribute(primary.alt || item.sku_name)}" loading="lazy" referrerpolicy="no-referrer" />` : '<div class="item-hero-placeholder">No media</div>'}
+      <div>
+        <span class="type-pill">${escapeHtml(item.identifiers?.asin ? 'Amazon ASIN Item' : 'Catalog Item')}</span>
+        <h3>${escapeHtml(item.sku_name)}</h3>
+        <p>${escapeHtml(item.product_name || item.sku)}</p>
+      </div>
+    </div>
     ${kv('SKU', item.sku)}
     ${kv('Name', item.sku_name)}
     ${kv('Brand', item.brand || 'unknown')}
     ${kv('Category', item.category || 'unknown')}
     ${kv('Supplier', item.supplier_name || 'unknown')}
+    ${kv('Price', formatCurrency(item.price, listing?.currency))}
+    ${kv('Cost', formatCurrency(item.cost))}
     ${kv('Sales 30d', item.sales_30d ?? 0)}
     ${kv('Lead time', `${item.lead_time_days ?? 0} days`)}
+    <section class="item-signal-grid">
+      ${metric('Identifiers', identifiers.length)}
+      ${metric('ID sources', new Set(normalizedIdentifiers.map(id => id.source)).size)}
+      ${metric('Media', media.length)}
+      ${metric('Market snapshots', marketSnapshots.length)}
+    </section>
+    <div class="section">
+      <h3>Identifier Registry</h3>
+      <div class="identifier-grid">
+        ${identifiers.map(([key, value]) => `<div><span>${escapeHtml(key)}</span><strong>${escapeHtml(value)}</strong></div>`).join('') || '<p class="empty">No identifiers recorded.</p>'}
+      </div>
+      <div class="identifier-source-list">
+        ${normalizedIdentifiers.slice(0, 18).map(identifier => `<span>${escapeHtml(identifier.scheme)} / ${escapeHtml(identifier.source)} / ${escapeHtml(identifier.value)}</span>`).join('')}
+      </div>
+    </div>
+    <div class="section">
+      <h3>Amazon Listing</h3>
+      ${listing ? `
+        <article class="market-card">
+          <strong>${escapeHtml(listing.title || item.sku_name)}</strong>
+          <p>${formatCurrency(listing.price, listing.currency)} current / ${formatCurrency(listing.list_price, listing.currency)} list / ${escapeHtml(listing.availability || 'availability unknown')}</p>
+          <small>${escapeHtml(listing.rating || amazonListing.rating || 'n/a')} rating / ${escapeHtml(listing.review_count || amazonListing.review_count || 0)} reviews / ${escapeHtml(listing.bought_in_last_month || amazonListing.bought_in_last_month || '')}</small>
+        </article>
+        ${renderBulletList(listing.feature_bullets || amazonListing.feature_bullets || [])}
+      ` : '<p class="empty">No listing snapshot for this item.</p>'}
+    </div>
+    <div class="section">
+      <h3>Media Gallery</h3>
+      ${renderMediaGallery(media)}
+      ${documents.length ? `<div class="document-list">${documents.map(doc => `<a class="doc-link" href="${escapeAttribute(doc.url)}">${escapeHtml(doc.variant || doc.alt || 'Document')}</a>`).join('')}</div>` : ''}
+    </div>
+    <div class="section">
+      <h3>Market Provenance</h3>
+      ${marketSnapshots.map(snapshot => `
+        <article class="market-card">
+          <strong>${escapeHtml(snapshot.source)} / ${escapeHtml(snapshot.status)}</strong>
+          <p>${escapeHtml(snapshot.asin || item.identifiers?.asin || '')} / ${escapeHtml(snapshot.retrieved_at || snapshot.created_at || '')}</p>
+          ${(snapshot.warnings || []).map(warning => `<small>${escapeHtml(warning)}</small>`).join('')}
+        </article>
+      `).join('') || '<p class="empty">No market snapshots recorded.</p>'}
+      <p class="empty">${pricePoints.length ? `${pricePoints.length} append-only price points available.` : 'No fabricated price points: provider challenge snapshots are retained without inventing history.'}</p>
+    </div>
     <div class="section">
       <h3>Inventory</h3>
       ${positions.map(pos => `<article class="checkpoint"><strong>${escapeHtml(pos.facility)} / ${escapeHtml(pos.location)}</strong><p>${pos.available} available, ${pos.on_hand} on hand, reorder at ${pos.reorder_point}</p></article>`).join('') || '<p class="empty">No inventory positions in snapshot.</p>'}
     </div>
+    <div class="section">
+      <h3>Schema Payload</h3>
+      <div class="schema-payload-grid">
+        ${renderJsonBlock('SKU attributes', item.sku_attributes)}
+        ${renderJsonBlock('Taxonomy', item.taxonomy)}
+        ${renderJsonBlock('Listing details', listingDetails)}
+        ${renderJsonBlock('Provenance', item.provenance)}
+      </div>
+    </div>
   `;
+}
+
+function itemHasMarketFidelity(item) {
+  return Boolean(
+    item?.identifiers?.asin
+    || item?.market_listing?.media?.length
+    || item?.market_listing?.snapshots?.length
+    || marketSnapshotsForItem(item).length
+  );
+}
+
+function itemSearchText(item) {
+  return [
+    item.sku,
+    item.sku_name,
+    item.product_name,
+    item.brand,
+    item.category,
+    item.status,
+    item.supplier_name,
+    ...identifierPairs(item).flat(),
+    ...(item.normalized_identifiers || []).flatMap(identifier => [identifier.scheme, identifier.value, identifier.source]),
+    latestListingForItem(item)?.title,
+    latestListingForItem(item)?.availability
+  ].join(' ').toLowerCase();
+}
+
+function identifierPairs(item) {
+  return Object.entries(item?.identifiers || {})
+    .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== '')
+    .map(([key, value]) => [key, String(value)]);
+}
+
+function mediaForItem(item) {
+  const localMedia = item?.market_listing?.media || [];
+  const globalMedia = (demo.market?.media || []).filter(asset => asset.sku === item?.sku || asset.sku_id === item?.sku_id);
+  return dedupeBy([...localMedia, ...globalMedia], asset => `${asset.media_type}:${asset.variant}:${asset.url}`);
+}
+
+function primaryMediaForItem(item) {
+  return mediaForItem(item).find(asset => asset.media_type === 'image' && asset.variant === 'hiRes')
+    || mediaForItem(item).find(asset => asset.media_type === 'image')
+    || null;
+}
+
+function latestListingForItem(item) {
+  return listingSnapshotsForItem(item)[0] || null;
+}
+
+function listingSnapshotsForItem(item) {
+  const localListings = item?.market_listing?.snapshots || item?.market_listing?.listings || [];
+  const globalListings = (demo.market?.listings || []).filter(listing => listing.sku === item?.sku || listing.sku_id === item?.sku_id);
+  return dedupeBy([...localListings, ...globalListings], listing => listing.id || `${listing.source}:${listing.asin}:${listing.created_at}`)
+    .sort((a, b) => String(b.created_at || b.retrieved_at || '').localeCompare(String(a.created_at || a.retrieved_at || '')));
+}
+
+function marketSnapshotsForItem(item) {
+  return (demo.market?.snapshots || [])
+    .filter(snapshot => snapshot.sku === item?.sku || snapshot.sku_id === item?.sku_id || snapshot.asin === item?.identifiers?.asin)
+    .sort((a, b) => String(b.retrieved_at || b.created_at || '').localeCompare(String(a.retrieved_at || a.created_at || '')));
+}
+
+function marketPointsForItem(item) {
+  return (demo.market?.points || [])
+    .filter(point => point.sku === item?.sku || point.sku_id === item?.sku_id || point.asin === item?.identifiers?.asin);
+}
+
+function renderMediaGallery(media = []) {
+  const gallery = media.filter(asset => asset.media_type === 'image').slice(0, 12);
+  if (!gallery.length) return '<p class="empty">No image media recorded.</p>';
+  return `
+    <div class="media-gallery">
+      ${gallery.map(asset => `
+        <a class="media-tile" href="${escapeAttribute(asset.url)}" title="${escapeAttribute(asset.alt || asset.variant || 'media')}">
+          <img src="${escapeAttribute(asset.url)}" alt="${escapeAttribute(asset.alt || 'Product media')}" loading="lazy" referrerpolicy="no-referrer" />
+          <span>${escapeHtml(asset.variant || asset.media_type)}</span>
+        </a>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderBulletList(bullets = []) {
+  if (!bullets.length) return '';
+  return `
+    <ul class="feature-bullets">
+      ${bullets.slice(0, 6).map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('')}
+    </ul>
+  `;
+}
+
+function renderJsonBlock(label, value) {
+  const json = JSON.stringify(value || {}, null, 2);
+  return `
+    <details class="json-block">
+      <summary>${escapeHtml(label)}</summary>
+      <pre>${escapeHtml(json)}</pre>
+    </details>
+  `;
+}
+
+function formatCurrency(value, currency = 'USD') {
+  if (value === null || value === undefined || value === '') return 'n/a';
+  const number = Number(value || 0);
+  if (!Number.isFinite(number)) return 'n/a';
+  return `${currency || 'USD'} ${number.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function dedupeBy(items, keyFn) {
+  const seen = new Set();
+  return items.filter(item => {
+    const key = keyFn(item);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function renderBoard() {
