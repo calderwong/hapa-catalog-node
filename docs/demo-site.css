@@ -400,6 +400,430 @@ small {
   line-height: 1.35;
 }
 
+.cards-workbench {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.cards-hero,
+.card-library-head,
+.process-board {
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(55, 215, 255, 0.10), transparent 36%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.76));
+}
+
+.cards-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(260px, 0.96fr);
+  gap: 14px;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.cards-hero-copy {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cards-hero-copy h3 {
+  max-width: 520px;
+  font-size: 24px;
+  line-height: 1.12;
+}
+
+.cards-hero-copy p,
+.card-library-head p,
+.process-board header p {
+  max-width: 700px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.workflow-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.workflow-steps span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  border-radius: 8px;
+  padding: 8px;
+  background: rgba(2, 6, 23, 0.58);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.workflow-steps strong {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(55, 215, 255, 0.16);
+  color: var(--cyan);
+}
+
+.cards-hero img {
+  width: 100%;
+  min-height: 190px;
+  max-height: 260px;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 8px;
+  object-fit: cover;
+  object-position: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 44px rgba(0, 0, 0, 0.35);
+}
+
+.cards-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.card-library-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+}
+
+.card-library-head strong,
+.process-board header strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.hapa-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 12px;
+}
+
+.hapa-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 252px;
+  padding: 12px;
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.84)),
+    repeating-linear-gradient(0deg, rgba(229, 240, 255, 0.025) 0, rgba(229, 240, 255, 0.025) 1px, transparent 1px, transparent 7px);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.hapa-card:hover,
+.hapa-card:focus-visible {
+  border-color: var(--cyan);
+  transform: translateY(-1px);
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(55, 215, 255, 0.16), 0 18px 42px rgba(0, 0, 0, 0.28);
+}
+
+.hapa-card.selected {
+  border-color: var(--fuchsia);
+  background:
+    linear-gradient(180deg, rgba(244, 114, 182, 0.12), rgba(2, 6, 23, 0.86)),
+    repeating-linear-gradient(0deg, rgba(229, 240, 255, 0.025) 0, rgba(229, 240, 255, 0.025) 1px, transparent 1px, transparent 7px);
+  box-shadow: inset 3px 0 0 var(--fuchsia), 0 0 28px rgba(244, 114, 182, 0.12);
+}
+
+.hapa-card-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 128px;
+  align-self: start;
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.64);
+  color: var(--cyan);
+  overflow: hidden;
+}
+
+.hapa-card-art svg {
+  position: relative;
+  z-index: 2;
+  width: 78px;
+  height: 78px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 12px currentColor);
+}
+
+.hapa-card-art span {
+  position: absolute;
+  inset: 16px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  opacity: 0.18;
+}
+
+.forecast-card .hapa-card-art {
+  color: var(--cyan);
+  background: linear-gradient(180deg, rgba(55, 215, 255, 0.13), rgba(2, 6, 23, 0.68));
+}
+
+.inventory-card .hapa-card-art {
+  color: var(--green);
+  background: linear-gradient(180deg, rgba(75, 227, 138, 0.12), rgba(2, 6, 23, 0.68));
+}
+
+.protocol-card .hapa-card-art {
+  color: var(--gold);
+  background: linear-gradient(180deg, rgba(245, 200, 92, 0.13), rgba(2, 6, 23, 0.68));
+}
+
+.hapa-card-body {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-width: 0;
+}
+
+.card-title-row,
+.card-action-line,
+.skill-row,
+.placement-strip,
+.process-policy,
+.route-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.type-pill,
+.status-pill,
+.card-action-line span,
+.skill-row span,
+.placement-strip > span,
+.process-policy span,
+.route-cards > span {
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.58);
+  padding: 5px 8px;
+  font-size: 11px;
+}
+
+.type-pill {
+  color: var(--cyan);
+  text-transform: uppercase;
+}
+
+.status-pill {
+  color: var(--green);
+}
+
+.hapa-card h3 {
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.hapa-card p {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.card-action-line span {
+  color: var(--gold);
+}
+
+.skill-row span {
+  color: var(--text);
+}
+
+.placement-chip {
+  display: inline-grid;
+  gap: 2px;
+  border-radius: 8px;
+  white-space: normal;
+}
+
+.placement-chip strong,
+.placement-chip small {
+  display: block;
+  line-height: 1.2;
+}
+
+.placement-chip small {
+  color: var(--muted);
+}
+
+.requires-review {
+  border-color: rgba(244, 114, 182, 0.38) !important;
+  color: #fbcfe8;
+  background: rgba(244, 114, 182, 0.10) !important;
+}
+
+.context-only {
+  border-color: rgba(55, 215, 255, 0.28) !important;
+  color: #cffafe;
+  background: rgba(55, 215, 255, 0.08) !important;
+}
+
+.process-board {
+  padding: 12px;
+}
+
+.process-board header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+
+.process-route-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.process-route {
+  display: grid;
+  gap: 10px;
+  min-height: 190px;
+  padding: 12px;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.58);
+}
+
+.process-route p {
+  margin-top: 5px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.process-policy {
+  margin-top: 9px;
+}
+
+.process-policy span {
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.route-cards > span {
+  display: grid;
+  gap: 2px;
+  border-radius: 8px;
+  line-height: 1.25;
+}
+
+.route-cards small {
+  color: var(--muted);
+}
+
+.selected-card-mini {
+  display: grid;
+  grid-template-columns: 94px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(125, 211, 252, 0.2);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.62);
+}
+
+.selected-card-mini .hapa-card-art {
+  min-height: 94px;
+}
+
+.selected-card-mini .hapa-card-art svg {
+  width: 58px;
+  height: 58px;
+}
+
+.selected-card-mini h3 {
+  margin-top: 8px;
+  font-size: 18px;
+}
+
+.selected-card-mini p,
+.context-copy {
+  margin-top: 7px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.context-copy {
+  padding: 10px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.46);
+}
+
+.check-list {
+  display: grid;
+  gap: 7px;
+}
+
+.check-list span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 7px 9px;
+  border: 1px solid rgba(75, 227, 138, 0.22);
+  border-radius: 8px;
+  background: rgba(75, 227, 138, 0.07);
+  color: var(--text);
+}
+
+.check-list span::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--green);
+  box-shadow: 0 0 10px rgba(75, 227, 138, 0.78);
+}
+
+.placement-card {
+  padding: 10px;
+  margin-top: 8px;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.5);
+}
+
+.placement-card p,
+.placement-card small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.run-card {
+  border-color: rgba(245, 200, 92, 0.2);
+  background: rgba(245, 200, 92, 0.06);
+}
+
 .forecast-dashboard {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
@@ -793,8 +1217,22 @@ small {
 
   .telemetry-grid,
   .board-grid,
-  .mini-grid {
+  .mini-grid,
+  .cards-summary,
+  .workflow-steps {
     grid-template-columns: 1fr;
+  }
+
+  .cards-hero,
+  .hapa-card,
+  .selected-card-mini {
+    grid-template-columns: 1fr;
+  }
+
+  .card-library-head,
+  .process-board header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .forecast-toolbar {

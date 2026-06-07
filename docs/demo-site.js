@@ -5,6 +5,7 @@ const state = {
   brand: '',
   status: '',
   selectedSku: '',
+  selectedCardId: '',
   forecastMetric: 'demand_units',
   forecastGrain: 'category',
   forecastIncrement: 'weeks',
@@ -12,7 +13,7 @@ const state = {
   forecastOverrides: []
 };
 
-const ASSET_VERSION = '20260607-forecast-dashboard-v5';
+const ASSET_VERSION = '20260607-cards-v6';
 const VIEWS = ['items', 'board', 'cards', 'forecast', 'ops', 'docs'];
 const FORECAST_OVERRIDE_STORAGE_KEY = 'hapaCatalogForecastOverrides:v1';
 const FORECAST_INCREMENTS = [
@@ -57,6 +58,7 @@ async function init() {
   demo = await fetch(`demo-data.json?v=${ASSET_VERSION}`).then(response => response.json());
   state.forecastOverrides = loadForecastOverrides();
   state.selectedSku = demo.items[0]?.sku || '';
+  state.selectedCardId = demo.hapa.cards[0]?.id || '';
   els.githubLink.href = demo.repo.github_url;
   els.generatedAt.textContent = `Generated ${new Date(demo.generated_at).toLocaleString()}`;
   els.skuChip.textContent = `${demo.summary.skus} SKUs`;
@@ -243,26 +245,286 @@ function taskCard(task) {
 
 function renderCards() {
   const data = demo.hapa;
+  const cards = data.cards.filter(card => cardMatchesCardSearch(card, data));
+  const selected = cards.find(card => card.id === state.selectedCardId) || cards[0] || data.cards[0];
+  if (selected) state.selectedCardId = selected.id;
   els.listTitle.textContent = 'Hapa Cards';
-  els.listMeta.textContent = `${data.cards.length} cards / ${data.placements.length} placements / ${data.processes.length} processes`;
-  els.list.className = 'list card-grid';
-  els.list.innerHTML = data.cards.map(card => `
-    <article class="task-card">
-      <strong>${escapeHtml(card.name)}</strong>
-      <p>${escapeHtml(card.card_kind)} / ${escapeHtml(card.source_node)} / ${escapeHtml((card.skills || []).join(', '))}</p>
-      <span class="badge">${escapeHtml(card.status)}</span>
-    </article>
-  `).join('');
+  els.listMeta.textContent = `${cards.length}/${data.cards.length} cards shown / ${data.placements.length} placements / ${data.processes.length} processes`;
+  els.list.className = 'list cards-workbench';
+  els.list.innerHTML = `
+    <section class="cards-hero">
+      <div class="cards-hero-copy">
+        <span class="micro-label">Card Routing</span>
+        <h3>Place expertise and protocol rules onto the work</h3>
+        <p>Avatar cards contribute operator context. Protocol cards attach guardrails. Placements decide where that context enters catalog, inventory, forecast, and review cycles.</p>
+        <div class="workflow-steps" aria-label="How Hapa cards work">
+          <span><strong>1</strong> Choose a card</span>
+          <span><strong>2</strong> Place it on work</span>
+          <span><strong>3</strong> Run with context</span>
+        </div>
+      </div>
+      <img src="assets/hapa-cards-console.png?v=${ASSET_VERSION}" alt="Hapa cards operator console artwork" />
+    </section>
+    <section class="cards-summary">
+      ${metric('Cards', data.cards.length)}
+      ${metric('Placements', data.placements.length)}
+      ${metric('Processes', data.processes.length)}
+      ${metric('Decision runs', data.decision_runs.length)}
+    </section>
+    <section class="card-library-head">
+      <div>
+        <span class="micro-label">Card Library</span>
+        <strong>Select a card to inspect how it changes execution</strong>
+      </div>
+      <p>Review required means the card is a governor. Context attached means the card's voice, checks, and policy are added to the run.</p>
+    </section>
+    <section class="hapa-card-grid">
+      ${cards.map(card => renderHapaCard(card, data.placements.filter(place => place.card_id === card.id))).join('') || '<p class="empty">No cards match the current search.</p>'}
+    </section>
+    <section class="process-board">
+      <header>
+        <div>
+          <span class="micro-label">Process Routing</span>
+          <strong>Where cards enter execution</strong>
+        </div>
+        <p>Each process pulls matching global, domain, role, and process placements before it commits work.</p>
+      </header>
+      <div class="process-route-grid">
+        ${data.processes.map(process => renderProcessRoute(process, data.placements)).join('')}
+      </div>
+    </section>
+  `;
+  els.list.querySelectorAll('[data-card-id]').forEach(cardButton => {
+    cardButton.addEventListener('click', () => {
+      state.selectedCardId = cardButton.dataset.cardId;
+      renderCards();
+    });
+    cardButton.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      state.selectedCardId = cardButton.dataset.cardId;
+      renderCards();
+    });
+  });
   els.inspectorBadge.textContent = 'cards';
+  renderCardInspector(selected, data);
+}
+
+function renderHapaCard(card, placements = []) {
+  const profile = cardProfile(card);
+  const primaryPlacement = placements[0];
+  return `
+    <article class="hapa-card ${escapeAttribute(profile.kindClass)} ${card.id === state.selectedCardId ? 'selected' : ''}" data-card-id="${escapeAttribute(card.id)}" tabindex="0" role="button" aria-pressed="${card.id === state.selectedCardId ? 'true' : 'false'}">
+      <div class="hapa-card-art" aria-hidden="true">
+        ${cardGlyph(card)}
+        <span></span>
+      </div>
+      <div class="hapa-card-body">
+        <div class="card-title-row">
+          <span class="type-pill">${escapeHtml(profile.typeLabel)}</span>
+          <span class="status-pill">${escapeHtml(card.status)}</span>
+        </div>
+        <h3>${escapeHtml(card.name)}</h3>
+        <p>${escapeHtml(profile.purpose)}</p>
+        <div class="card-action-line">
+          <span>${escapeHtml(placements.length ? `${placements.length} placements` : 'Ready to place')}</span>
+          <span>${escapeHtml(primaryPlacement ? decisionModeLabel(primaryPlacement.decision_mode) : 'No route yet')}</span>
+        </div>
+        <div class="skill-row">
+          ${(card.skills || []).slice(0, 3).map(skill => `<span>${escapeHtml(skill)}</span>`).join('')}
+        </div>
+        <div class="placement-strip">
+          ${placements.slice(0, 3).map(place => renderPlacementChip(place)).join('') || '<span>Not placed</span>'}
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderProcessRoute(process, placements = []) {
+  const routed = placements.filter(place => placementMatchesProcess(place, process));
+  const requiredReviewCount = routed.filter(place => place.decision_mode === 'review_required').length;
+  return `
+    <article class="process-route">
+      <div>
+        <strong>${escapeHtml(process.name)}</strong>
+        <p>${escapeHtml(process.process_key)} / ${escapeHtml(process.cadence || 'manual')} / ${escapeHtml(process.target_domain)}</p>
+        <div class="process-policy">
+          <span>${escapeHtml(requiredReviewCount ? `${requiredReviewCount} reviews` : 'context only')}</span>
+          <span>${process.card_policy?.require_governor ? 'governor required' : 'governor optional'}</span>
+        </div>
+      </div>
+      <div class="route-cards">
+        ${routed.slice(0, 5).map(place => `
+          <span class="${escapeAttribute(place.decision_mode === 'review_required' ? 'requires-review' : 'context-only')}">
+            ${escapeHtml(place.card?.name || place.card_id)}
+            <small>${escapeHtml(place.role)} / ${escapeHtml(decisionModeLabel(place.decision_mode))}</small>
+          </span>
+        `).join('') || '<span>No routed cards</span>'}
+      </div>
+    </article>
+  `;
+}
+
+function renderCardInspector(card, data) {
+  if (!card) {
+    els.inspectorBody.innerHTML = '<p class="empty">No card selected.</p>';
+    return;
+  }
+  const placements = data.placements.filter(place => place.card_id === card.id);
+  const profile = cardProfile(card);
+  const processes = data.processes.filter(process => placements.some(place => placementMatchesProcess(place, process)));
+  const runs = recentRunsForCard(card.id, data.decision_runs);
   els.inspectorBody.innerHTML = `
-    ${kv('Placements', data.placements.length)}
-    ${kv('Processes', data.processes.length)}
-    ${kv('Decision runs', data.decision_runs.length)}
+    <div class="selected-card-mini ${escapeAttribute(profile.kindClass)}">
+      <div class="hapa-card-art" aria-hidden="true">${cardGlyph(card)}</div>
+      <div>
+        <span class="type-pill">${escapeHtml(profile.typeLabel)}</span>
+        <h3>${escapeHtml(card.name)}</h3>
+        <p>${escapeHtml(profile.purpose)}</p>
+      </div>
+    </div>
+    ${kv('Source', card.source_node)}
+    ${kv('Owner', card.owner_identity_id)}
+    ${kv('Card ref', card.card_ref)}
+    ${kv('Placements', placements.length)}
+    ${kv('Decision mode', placementModes(placements))}
     <div class="section">
-      <h3>Placement Examples</h3>
-      ${data.placements.slice(0, 8).map(place => `<article class="checkpoint"><strong>${escapeHtml(place.role || place.placement_role || 'placement')}</strong><p>${escapeHtml(place.card_name || place.card_id)} -> ${escapeHtml(place.target_type)}:${escapeHtml(place.target_id)}</p></article>`).join('')}
+      <h3>Voice</h3>
+      <p class="context-copy">${escapeHtml(card.context?.voice || 'Context is attached when this card is routed into a process.')}</p>
+    </div>
+    <div class="section">
+      <h3>Decision Bias</h3>
+      <p class="context-copy">${escapeHtml(card.context?.decision_bias || 'No decision bias recorded.')}</p>
+    </div>
+    <div class="section">
+      <h3>Checks</h3>
+      <div class="check-list">
+        ${(card.context?.checks || []).map(check => `<span>${escapeHtml(check)}</span>`).join('') || '<span>No checks recorded</span>'}
+      </div>
+    </div>
+    <div class="section">
+      <h3>Placements</h3>
+      ${placements.map(place => `
+        <article class="placement-card">
+          <strong>${escapeHtml(roleLabel(place.role))} / ${escapeHtml(decisionModeLabel(place.decision_mode))}</strong>
+          <p>${escapeHtml(place.target_type)}:${escapeHtml(place.target_id)} / ${escapeHtml(place.cadence || 'as-needed')}</p>
+          <small>${escapeHtml(place.metadata?.surface || 'Placement')}</small>
+        </article>
+      `).join('') || '<p class="empty">No placements recorded.</p>'}
+    </div>
+    <div class="section">
+      <h3>Processes</h3>
+      ${processes.map(process => `<article class="placement-card"><strong>${escapeHtml(process.name)}</strong><p>${escapeHtml(process.metadata?.description || process.process_key)}</p></article>`).join('') || '<p class="empty">No process routes for this card.</p>'}
+    </div>
+    <div class="section">
+      <h3>Recent Runs</h3>
+      ${runs.slice(0, 4).map(run => `
+        <article class="placement-card run-card">
+          <strong>${escapeHtml(run.process_key)} / ${escapeHtml(run.status)}</strong>
+          <p>${escapeHtml(run.subject_type)}:${escapeHtml(run.subject_id)} / ${escapeHtml(run.result?.decision || 'context_attached')}</p>
+          <small>${escapeHtml(new Date(run.created_at).toLocaleString())}</small>
+        </article>
+      `).join('') || '<p class="empty">No decision runs include this card yet.</p>'}
     </div>
   `;
+}
+
+function cardMatchesCardSearch(card, data) {
+  if (!state.query) return true;
+  const placements = data.placements.filter(place => place.card_id === card.id);
+  const processes = data.processes.filter(process => placements.some(place => placementMatchesProcess(place, process)));
+  const haystack = [
+    card.name,
+    card.card_kind,
+    card.source_node,
+    card.card_ref,
+    card.context?.voice,
+    card.context?.decision_bias,
+    ...(card.context?.checks || []),
+    ...(card.skills || []),
+    ...(card.tags || []),
+    ...placements.flatMap(place => [place.role, place.decision_mode, place.target_type, place.target_id, place.cadence]),
+    ...processes.flatMap(process => [process.name, process.process_key, process.target_domain])
+  ].join(' ').toLowerCase();
+  return haystack.includes(state.query);
+}
+
+function cardProfile(card) {
+  if (card.card_kind === 'protocol') {
+    return {
+      typeLabel: 'Protocol Guardrail',
+      kindClass: 'protocol-card',
+      purpose: 'Applies provenance, audit, rollback, and source-truth checks before decisions commit.'
+    };
+  }
+  if ((card.tags || []).includes('inventory')) {
+    return {
+      typeLabel: 'Inventory Avatar',
+      kindClass: 'inventory-card',
+      purpose: 'Reviews stock truth, replenishment risk, and in-stock actions before execution.'
+    };
+  }
+  return {
+    typeLabel: 'Forecast Avatar',
+    kindClass: 'forecast-card',
+    purpose: 'Reviews demand assumptions, forecast quality, and promotion deltas in planning cycles.'
+  };
+}
+
+function cardGlyph(card) {
+  const profile = cardProfile(card);
+  if (profile.kindClass === 'protocol-card') {
+    return '<svg viewBox="0 0 96 96"><path d="M18 50 36 24h24l18 26-30 30Z"/><path d="M30 50h36M48 24v56M36 24l12 26 12-26"/></svg>';
+  }
+  if (profile.kindClass === 'inventory-card') {
+    return '<svg viewBox="0 0 96 96"><path d="M18 34 48 18l30 16v34L48 84 18 68Z"/><path d="M18 34l30 16 30-16M48 50v34"/><path d="M32 62h14M32 70h22"/></svg>';
+  }
+  return '<svg viewBox="0 0 96 96"><path d="M20 70c8-22 20-34 36-34 10 0 17 5 20 14"/><path d="M22 74h56M30 58l10 8 16-22 12 12 8-18"/><circle cx="36" cy="26" r="10"/></svg>';
+}
+
+function shortTarget(place) {
+  return `${place.target_type.replace('catalog_domain', 'domain')}:${place.target_id.replace('all-decisions', 'all')}`;
+}
+
+function placementModes(placements = []) {
+  return [...new Set(placements.map(place => decisionModeLabel(place.decision_mode)).filter(Boolean))].join(', ') || 'Context attached';
+}
+
+function decisionModeLabel(mode = '') {
+  if (mode === 'review_required') return 'Review required';
+  if (mode === 'context') return 'Context attached';
+  return mode.replace(/_/g, ' ') || 'Context attached';
+}
+
+function roleLabel(role = '') {
+  if (role === 'governor') return 'Governor';
+  if (role === 'advisor') return 'Advisor';
+  if (role === 'protocol') return 'Protocol';
+  return role.replace(/_/g, ' ') || 'Placement';
+}
+
+function renderPlacementChip(place) {
+  const modeClass = place.decision_mode === 'review_required' ? 'requires-review' : 'context-only';
+  return `
+    <span class="placement-chip ${escapeAttribute(modeClass)}">
+      <strong>${escapeHtml(roleLabel(place.role))}</strong>
+      <small>${escapeHtml(shortTarget(place))}</small>
+    </span>
+  `;
+}
+
+function recentRunsForCard(cardId, runs = []) {
+  return runs
+    .filter(run => (run.card_context?.routed_cards || run.result?.routed_cards || []).some(routed => routed.card_id === cardId))
+    .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+}
+
+function placementMatchesProcess(place, process) {
+  if (place.target_type === 'process' && place.target_id === process.process_key) return true;
+  if (place.target_type === 'catalog_domain' && place.target_id === process.target_domain) return true;
+  if (place.target_type === 'governance' && place.target_id === 'all-decisions') return true;
+  return false;
 }
 
 function renderForecast() {

@@ -12,14 +12,20 @@ const data = JSON.parse(dataText);
 
 assert.ok(index.includes('id="demoApp"'));
 assert.ok(index.includes('demo-site.js'));
-assert.ok(index.includes('forecast-dashboard-v5'));
+assert.ok(index.includes('cards-v6'));
 assert.ok(script.includes('demo-data.json'));
 assert.ok(script.includes('function formatMoney'));
 assert.ok(script.includes('staticDemandLineChart'));
 assert.ok(script.includes('forecastMetric'));
 assert.ok(script.includes('forecastIncrement'));
 assert.ok(script.includes('FORECAST_OVERRIDE_STORAGE_KEY'));
+assert.ok(script.includes('hapa-cards-console.png'));
+assert.ok(script.includes('function renderCardInspector'));
+assert.ok(script.includes('function cardMatchesCardSearch'));
 assert.ok(styles.includes('--cyan'));
+assert.ok(styles.includes('.cards-hero'));
+assert.ok(styles.includes('.hapa-card'));
+assert.ok(styles.includes('.process-route'));
 assert.equal(data.ok, true);
 assert.ok(data.items.length >= 100);
 assert.ok(data.board.summary.total_tasks >= data.board.summary.done);
@@ -43,8 +49,12 @@ assert.ok(data.forecast_dashboard.graph.series.length >= 12);
 assert.ok(data.forecast_dashboard.purchase_orders.length >= 40);
 assert.equal(data.forecast_experimentation.ok, true);
 assert.ok(data.forecast_experimentation.assumption_sets.length >= 3);
+assert.ok(data.hapa.cards.length >= 3);
+assert.ok(data.hapa.placements.length >= 6);
+assert.ok(data.hapa.processes.length >= 4);
 assert.equal(dataText.includes('/Users/'), false);
 if (data.screenshot) assert.ok(existsSync(join(docsDir, data.screenshot)));
+assert.ok(existsSync(join(docsDir, 'assets/hapa-cards-console.png')));
 
 console.log(JSON.stringify({
   ok: true,
