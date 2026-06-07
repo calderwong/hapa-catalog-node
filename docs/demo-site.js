@@ -4,11 +4,21 @@ const state = {
   category: '',
   brand: '',
   status: '',
-  selectedSku: ''
+  selectedSku: '',
+  forecastMetric: 'demand_units',
+  forecastGrain: 'category'
 };
 
-const ASSET_VERSION = '20260607-forecast-dashboard-v3';
+const ASSET_VERSION = '20260607-forecast-dashboard-v4';
 const VIEWS = ['items', 'board', 'cards', 'forecast', 'ops', 'docs'];
+const FORECAST_METRICS = [
+  { key: 'demand_units', label: 'Units', actual: 'Units sold', forecast: 'Projected units', format: 'number' },
+  { key: 'revenue', label: 'Revenue', actual: 'Revenue sold', forecast: 'Projected revenue', format: 'money' },
+  { key: 'cost', label: 'Cost / COGS', actual: 'Total cost', forecast: 'COGS', format: 'money' },
+  { key: 'inventory', label: 'Inventory', actual: 'On hand', forecast: 'Projected on hand', format: 'number' },
+  { key: 'supply', label: 'Supply', actual: 'Time-unit supply', forecast: 'Time-unit supply', format: 'decimal' },
+  { key: 'on_order', label: 'On order', actual: 'On-order units', forecast: 'On-order units', format: 'number' }
+];
 
 const els = {
   skuChip: document.querySelector('#skuChip'),
@@ -243,17 +253,23 @@ function renderCards() {
 }
 
 function renderForecast() {
-  const dashboard = demo.forecast_dashboard;
-  const rows = (dashboard.table.rows || []).filter(row => [row.key, row.label, row.level, row.risk_state, ...(row.skus || [])].join(' ').toLowerCase().includes(state.query));
+  const dashboard = selectedForecastDashboard();
+  const metricConfig = forecastMetricConfig();
+  const rows = forecastFilteredRows(dashboard);
+  const demandSeries = demandSeriesFromRows(dashboard.table.buckets || [], rows);
   els.listTitle.textContent = 'Forecast Dashboard';
-  els.listMeta.textContent = `${rows.length} rows / ${demo.forecast_runs.length} runs / ${dashboard.purchase_orders.length} purchase orders`;
+  els.listMeta.textContent = `${rows.length} ${state.forecastGrain} rows / ${metricConfig.label} / ${dashboard.purchase_orders.length} purchase orders`;
   els.list.className = 'list forecast-dashboard';
   els.list.innerHTML = `
-    ${staticForecastGraph(dashboard.graph)}
-    ${staticForecastTable({ ...dashboard, table: { ...dashboard.table, rows } })}
+    ${forecastControls(dashboard, metricConfig)}
+    ${staticDemandLineChart(demandSeries)}
+    ${staticForecastTable({ ...dashboard, table: { ...dashboard.table, rows } }, metricConfig)}
   `;
+  attachForecastControls();
   els.inspectorBadge.textContent = 'forecast';
   els.inspectorBody.innerHTML = `
+    ${kv('Grain', state.forecastGrain)}
+    ${kv('Metric', metricConfig.label)}
     ${kv('Forecasts', demo.summary.forecast_runs)}
     ${kv('Actuals', demo.summary.forecast_actuals)}
     ${kv('Quality events', demo.summary.forecast_quality_events)}
@@ -270,11 +286,132 @@ function renderForecast() {
   `;
 }
 
-function staticForecastGraph(graph = {}) {
-  const series = graph.series || [];
-  const maxDemand = Math.max(1, ...series.map(point => Number(point.demand_units || 0)));
+function selectedForecastDashboard() {
+  return demo.forecast_dashboards?.[state.forecastGrain] || demo.forecast_dashboard;
+}
+
+function forecastMetricConfig() {
+  return FORECAST_METRICS.find(metric => metric.key === state.forecastMetric) || FORECAST_METRICS[0];
+}
+
+function forecastControls(dashboard, metricConfig) {
+  const filterLabels = [
+    state.query ? `Search: ${state.query}` : '',
+    state.category ? `Category: ${state.category}` : '',
+    state.brand ? `Brand: ${state.brand}` : '',
+    state.status ? `State: ${state.status}` : ''
+  ].filter(Boolean);
   return `
-    <section class="forecast-graph">
+    <section class="forecast-toolbar" aria-label="Forecast table controls">
+      <label>
+        <span>Metric</span>
+        <select id="forecastMetric">
+          ${FORECAST_METRICS.map(metric => `<option value="${escapeAttribute(metric.key)}" ${metric.key === state.forecastMetric ? 'selected' : ''}>${escapeHtml(metric.label)}</option>`).join('')}
+        </select>
+      </label>
+      <label>
+        <span>Grain</span>
+        <select id="forecastGrain">
+          ${['category', 'brand', 'state', 'sku'].map(grain => `<option value="${escapeAttribute(grain)}" ${grain === state.forecastGrain ? 'selected' : ''}>${escapeHtml(grain)}</option>`).join('')}
+        </select>
+      </label>
+      <div class="forecast-legend" aria-label="Actual and forecast legend">
+        <span class="legend-chip actual">Actual</span>
+        <span class="legend-chip forecast">Forecast</span>
+      </div>
+      <p>${escapeHtml(metricConfig.actual)} switches to ${escapeHtml(metricConfig.forecast)} at the forecast boundary. ${filterLabels.length ? `Filters: ${filterLabels.join(' / ')}` : 'Sidebar search and filters apply to this table.'}</p>
+    </section>
+  `;
+}
+
+function attachForecastControls() {
+  const metricSelect = els.list.querySelector('#forecastMetric');
+  const grainSelect = els.list.querySelector('#forecastGrain');
+  metricSelect?.addEventListener('change', () => {
+    state.forecastMetric = metricSelect.value;
+    renderForecast();
+  });
+  grainSelect?.addEventListener('change', () => {
+    state.forecastGrain = grainSelect.value;
+    renderForecast();
+  });
+}
+
+function forecastFilteredRows(dashboard) {
+  return (dashboard.table.rows || []).filter(row => forecastRowMatches(row));
+}
+
+function forecastRowMatches(row) {
+  const rowItems = (row.skus || []).map(sku => demo.items.find(item => item.sku === sku)).filter(Boolean);
+  const text = [
+    row.key,
+    row.label,
+    row.level,
+    row.risk_state,
+    ...(row.skus || []),
+    ...rowItems.flatMap(item => [item.sku_name, item.brand, item.category, item.status])
+  ].join(' ').toLowerCase();
+  return (!state.query || text.includes(state.query))
+    && (!state.category || rowItems.some(item => item.category === state.category) || row.label === state.category)
+    && (!state.brand || rowItems.some(item => item.brand === state.brand) || row.label === state.brand)
+    && (!state.status || rowItems.some(item => item.status === state.status) || row.label === state.status);
+}
+
+function demandSeriesFromRows(buckets, rows) {
+  return buckets.map((bucket, bucketIndex) => {
+    const demand = rows.reduce((total, row) => total + Number(demandValue(row.buckets[bucketIndex]) || 0), 0);
+    const revenue = rows.reduce((total, row) => total + Number(metricValue(row.buckets[bucketIndex], 'revenue') || 0), 0);
+    return { ...bucket, demand_units: demand, revenue };
+  });
+}
+
+function demandValue(bucket) {
+  if (!bucket) return 0;
+  return bucket.kind === 'actual'
+    ? Number(bucket.effective?.units_sold || 0)
+    : Number(bucket.effective?.projected_units || 0);
+}
+
+function staticDemandLineChart(series = []) {
+  const maxDemand = Math.max(1, ...series.map(point => Number(point.demand_units || 0)));
+  const width = 720;
+  const height = 210;
+  const padX = 32;
+  const padY = 24;
+  const innerWidth = width - padX * 2;
+  const innerHeight = height - padY * 2;
+  const step = series.length > 1 ? innerWidth / (series.length - 1) : innerWidth;
+  const points = series.map((point, index) => {
+    const x = padX + index * step;
+    const y = padY + innerHeight - (Number(point.demand_units || 0) / maxDemand) * innerHeight;
+    return `${roundSvg(x)},${roundSvg(y)}`;
+  }).join(' ');
+  return `
+    <section class="forecast-chart" aria-label="Sales and demand line chart">
+      <div class="forecast-chart-head">
+        <strong>Sales / Demand Trend</strong>
+        <span>bars plus line, filtered to the current table</span>
+      </div>
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Actual sales and forecast demand by week">
+        <line class="axis" x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}"></line>
+        ${series.map((point, index) => {
+          const barWidth = Math.max(12, step * 0.42);
+          const x = padX + index * step - barWidth / 2;
+          const barHeight = Math.max(3, (Number(point.demand_units || 0) / maxDemand) * innerHeight);
+          const y = height - padY - barHeight;
+          return `<rect class="histogram-bar ${point.kind}" x="${roundSvg(x)}" y="${roundSvg(y)}" width="${roundSvg(barWidth)}" height="${roundSvg(barHeight)}"></rect>`;
+        }).join('')}
+        <polyline class="demand-line" points="${points}"></polyline>
+        ${series.map((point, index) => {
+          const [x, y] = points.split(' ')[index].split(',');
+          return `<circle class="demand-point ${point.kind}" cx="${x}" cy="${y}" r="4"></circle>`;
+        }).join('')}
+      </svg>
+      <div class="chart-labels">
+        ${series.map(point => `<span>${escapeHtml(point.label)}</span>`).join('')}
+      </div>
+    </section>
+    <section class="forecast-mini-bars" aria-label="Demand bucket details">
       ${series.map(point => `
         <article class="forecast-bar ${point.kind}">
           <div class="bar-track"><span style="height:${Math.max(4, Math.round((point.demand_units / maxDemand) * 100))}%"></span></div>
@@ -286,26 +423,43 @@ function staticForecastGraph(graph = {}) {
   `;
 }
 
-function staticForecastTable(dashboard) {
+function staticForecastTable(dashboard, metricConfig) {
   const buckets = dashboard.table.buckets || [];
   return `
     <section class="forecast-table-wrap">
       <table class="forecast-table">
-        <thead><tr><th>Scope</th>${buckets.map(bucket => `<th><span>${escapeHtml(bucket.label)}</span><small>${escapeHtml(bucket.kind)}</small></th>`).join('')}</tr></thead>
+        <thead><tr><th>Scope</th>${buckets.map(bucket => `<th class="${escapeAttribute(bucket.kind)}-period"><span>${escapeHtml(bucket.label)}</span><small>${bucket.kind === 'actual' ? escapeHtml(metricConfig.actual) : escapeHtml(metricConfig.forecast)}</small></th>`).join('')}</tr></thead>
         <tbody>
           ${(dashboard.table.rows || []).slice(0, 12).map(row => `
-            <tr>
+            <tr class="metric-row">
               <th><strong>${escapeHtml(row.label)}</strong><small>${escapeHtml(row.level)} / ${row.sku_count} SKU / ${escapeHtml(row.risk_state)}</small></th>
-              ${row.buckets.map(bucket => bucket.kind === 'actual'
-                ? `<td class="actual-cell"><strong>${Math.round(bucket.effective.units_sold || 0)}</strong><small>$${formatMoney(bucket.effective.revenue_sold)} rev</small><small>$${formatMoney(bucket.effective.total_cost)} cost</small></td>`
-                : `<td class="forecast-cell"><strong>${Math.round(bucket.effective.projected_units || 0)}</strong><small>$${formatMoney(bucket.effective.projected_revenue)} rev</small><small>${bucket.supply.on_hand_time_units} ${escapeHtml(bucket.supply.time_unit)} supply</small><small>${bucket.supply.on_order_units} on order</small></td>`).join('')}
+              ${row.buckets.map(bucket => `<td class="${bucket.kind === 'actual' ? 'actual-cell' : 'forecast-cell'}"><strong>${formatMetricValue(metricValue(bucket, metricConfig.key), metricConfig)}</strong><small>${escapeHtml(bucket.kind === 'actual' ? 'actual' : 'forecast')}</small></td>`).join('')}
             </tr>
-            <tr class="yoy-row"><th>YoY</th>${row.buckets.map(bucket => `<td>${bucket.yoy.units_variance_percent > 0 ? '+' : ''}${bucket.yoy.units_variance_percent}%</td>`).join('')}</tr>
+            <tr class="yoy-row"><th>YoY demand</th>${row.buckets.map(bucket => `<td>${bucket.yoy.units_variance_percent > 0 ? '+' : ''}${bucket.yoy.units_variance_percent}%</td>`).join('')}</tr>
           `).join('') || `<tr><td colspan="${buckets.length + 1}">No forecast dashboard rows.</td></tr>`}
         </tbody>
       </table>
     </section>
   `;
+}
+
+function metricValue(bucket, metricKey) {
+  if (!bucket) return 0;
+  const effective = bucket.effective || {};
+  if (metricKey === 'demand_units') return bucket.kind === 'actual' ? effective.units_sold : effective.projected_units;
+  if (metricKey === 'revenue') return bucket.kind === 'actual' ? effective.revenue_sold : effective.projected_revenue;
+  if (metricKey === 'cost') return bucket.kind === 'actual' ? effective.total_cost : effective.cost_of_goods_sold;
+  if (metricKey === 'inventory') return bucket.kind === 'actual' ? bucket.supply?.on_hand_units : effective.projected_inventory_on_hand;
+  if (metricKey === 'supply') return bucket.supply?.on_hand_time_units;
+  if (metricKey === 'on_order') return bucket.supply?.on_order_units;
+  return bucket.kind === 'actual' ? effective.units_sold : effective.projected_units;
+}
+
+function formatMetricValue(value, metricConfig) {
+  const number = Number(value || 0);
+  if (metricConfig.format === 'money') return `$${formatMoney(number)}`;
+  if (metricConfig.format === 'decimal') return number.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  return Math.round(number).toLocaleString();
 }
 
 function renderOps() {
@@ -378,6 +532,10 @@ function kv(label, value) {
 
 function formatMoney(value = 0) {
   return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function roundSvg(value) {
+  return Number(value || 0).toFixed(2);
 }
 
 function escapeHtml(value = '') {

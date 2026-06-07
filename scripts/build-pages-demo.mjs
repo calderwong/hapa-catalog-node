@@ -75,7 +75,13 @@ const selectedItem = items[0] ? core.getItem(items[0].sku).item : null;
 const demoFixture = core.demoCatalogRecords({ limit: 100 });
 const marketPrices = core.marketPrices({ limit: 120 });
 const marketListing = core.marketListingData({ limit: 120 });
-const forecastDashboard = core.forecastDashboard({ granularity: 'category', increment: 'weeks', sort_by: 'supply_time_units' });
+const forecastDashboards = {
+  category: core.forecastDashboard({ granularity: 'category', increment: 'weeks', sort_by: 'supply_time_units' }),
+  brand: core.forecastDashboard({ granularity: 'brand', increment: 'weeks', sort_by: 'supply_time_units' }),
+  state: core.forecastDashboard({ granularity: 'state', increment: 'weeks', sort_by: 'supply_time_units' }),
+  sku: core.forecastDashboard({ granularity: 'sku', increment: 'weeks', sort_by: 'supply_time_units' })
+};
+const forecastDashboard = forecastDashboards.category;
 const forecastExperimentation = core.forecastExperimentation({ granularity: 'category', increment: 'weeks' });
 const board = core.kanbanBoard().board;
 const ops = core.opsOverview();
@@ -110,6 +116,7 @@ const payload = sanitize({
   inventory: core.inventory({ limit: 120 }).positions,
   forecast_runs: core.store.listForecastRuns().slice(0, 40),
   forecast_dashboard: forecastDashboard,
+  forecast_dashboards: forecastDashboards,
   forecast_experimentation: forecastExperimentation,
   market: {
     snapshots: marketPrices.snapshots,
