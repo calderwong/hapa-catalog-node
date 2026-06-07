@@ -554,6 +554,93 @@ test('imports forecast actuals and creates quality remediation events', () => {
   }
 });
 
+test('builds forecast dashboard overrides supply and experimentation contracts', () => {
+  const core = makeCore();
+  try {
+    core.importDemoCatalog({ limit: 100, actor: 'test' });
+    const dashboard = core.forecastDashboard({
+      granularity: 'category',
+      increment: 'weeks',
+      sort_by: 'supply_time_units'
+    });
+    assert.equal(dashboard.ok, true);
+    assert.equal(dashboard.table.buckets.length, 12);
+    assert.equal(dashboard.table.buckets.filter(bucket => bucket.kind === 'actual').length, 6);
+    assert.equal(dashboard.table.buckets.filter(bucket => bucket.kind === 'forecast').length, 6);
+    assert.ok(dashboard.table.rows.length >= 8);
+    assert.ok(dashboard.graph.series.some(point => point.inventory_on_hand >= 0));
+    assert.ok(dashboard.purchase_orders.length >= 40);
+    assert.ok(dashboard.subscriber_payload.rows[0].buckets.some(bucket => bucket.effective));
+
+    const row = dashboard.table.rows[0];
+    const bucket = row.buckets.find(item => item.kind === 'forecast');
+    const override = core.createForecastOverride({
+      scope_level: row.level,
+      scope_key: row.key,
+      bucket_start: bucket.bucket_start,
+      bucket_end: bucket.bucket_end,
+      field: 'projected_units',
+      value: 77,
+      reason_code: 'test_override',
+      rationale: 'Testing override rationale capture.',
+      actor: 'test'
+    });
+    assert.equal(override.ok, true);
+    assert.equal(override.override.reason_code, 'test_override');
+
+    const adjusted = core.forecastDashboard({ granularity: row.level, increment: 'weeks' });
+    const adjustedBucket = adjusted.table.rows.find(item => item.key === row.key).buckets.find(item => item.bucket_start === bucket.bucket_start);
+    assert.equal(adjustedBucket.effective.projected_units, 77);
+    assert.equal(adjustedBucket.overrides.length, 1);
+
+    const assumptions = core.forecastAssumptionSets();
+    assert.ok(assumptions.assumption_sets.some(set => set.id === 'assume-promo-lift'));
+    const custom = core.saveForecastAssumptionSet({
+      id: 'assume-test-launch',
+      name: 'Test Launch',
+      assumptions: { launch_ramp: 0.2, seasonality_factor: 1.1 },
+      actor: 'test'
+    });
+    assert.equal(custom.assumption_set.id, 'assume-test-launch');
+
+    const purchaseOrder = core.saveForecastPurchaseOrder({
+      sku: 'DEMO-WEAR-001',
+      units: 44,
+      expected_delivery_date: '2026-06-28T00:00:00.000Z',
+      actor: 'test'
+    });
+    assert.equal(purchaseOrder.ok, true);
+    assert.equal(purchaseOrder.purchase_order.units, 44);
+
+    const experiment = core.runForecastExperiment({ sku: 'DEMO-WEAR-001', actor: 'test' });
+    assert.equal(experiment.ok, true);
+    assert.equal(experiment.runs.length, 4);
+    assert.equal(experiment.comparison.models.length, 4);
+    assert.ok(experiment.branches.length >= 3);
+
+    const compare = core.compareForecastRuns({ run_ids: experiment.runs.slice(0, 2).map(run => run.id), actor: 'test' });
+    assert.equal(compare.ok, true);
+    assert.equal(compare.rows.length, 2);
+    assert.ok(compare.diffs[1].metric_effects.delta_percent !== undefined);
+
+    const plan = core.promoteForecastPlan({
+      run_id: experiment.runs[0].id,
+      rationale: 'Testing plan-of-record promotion.',
+      actor: 'test'
+    });
+    assert.equal(plan.ok, true);
+    assert.equal(plan.plan_record.status, 'active');
+    assert.ok(plan.decision.result.routed_cards.length >= 1);
+
+    const payload = core.forecastSubscriberPayload({ sku: 'DEMO-WEAR-001' });
+    assert.equal(payload.ok, true);
+    assert.equal(payload.payload.contract, 'forecast-effective-supply-subscriber-v1');
+    assert.ok(payload.payload.plan_records.length >= 1);
+  } finally {
+    core.close();
+  }
+});
+
 test('validates connector contracts, performance target evidence, and scoped authorization', () => {
   const core = makeCore();
   try {

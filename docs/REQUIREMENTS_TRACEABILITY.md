@@ -301,3 +301,68 @@ Source requirements: `../outputs/hapa_catalog_item_master_requirements.md` from 
 | HCAT-282 Refresh traceability after parity pass | `parity_traceability_refresh` artifact and this traceability section |
 | HCAT-283 Run performance check after 100 SKU import | `demo_fixture_performance_check` artifact and `npm run performance:smoke` |
 | HCAT-284 Define next drain goal acceptance | `next_drain_goal_acceptance` artifact and release gate `parity-docs-ui-review-rehearsal` |
+
+## Forecast Dashboard And Experimentation Traceability
+
+| Card | Evidence |
+| --- | --- |
+| HCAT-285 Define forecast dashboard data model | `forecastDashboard()` contract, `/v1/forecasts/dashboard`, `forecast-dashboard-v1`, and `test/catalog-core.test.mjs` |
+| HCAT-286 Generate dummy actuals and forecast fixture data | `buildForecastDashboardRow()` deterministic actual/forecast buckets, seeded 100-SKU fixture, and `scripts/pages-smoke.mjs` dashboard assertions |
+| HCAT-287 Implement time increment aggregation | `normalizeForecastIncrement()`, `forecastIncrementDays()`, and day/week/month/quarter/year dashboard filters |
+| HCAT-288 Add YoY baseline and variance calculations | Dashboard bucket `yoy` values and YoY table rows in `web/app.js` and `docs/demo-site.js` |
+| HCAT-289 Expose dashboard API and CLI contract | `/v1/forecasts/dashboard`, CLI `forecast dashboard`, and `docs/API.md` examples |
+| HCAT-290 Add Category Brand State SKU filters | Dashboard query filters, web Forecast controls, and metadata filters returned by `/v1/forecasts/dashboard` |
+| HCAT-291 Add filter metadata and empty states | `forecastDashboardMetadata()`, dashboard `metadata.filters`, and web/static empty table messaging |
+| HCAT-292 Persist filter and increment state in UI | `state.forecastFilters` and `attachForecastDashboardInteractions()` in `web/app.js` |
+| HCAT-293 Optimize filtered dashboard query path | `matchesForecastDashboardFilters()` and grouped filtered rows before graph/table rendering |
+| HCAT-294 Verify responsive accessible filter controls | Forecast control CSS in `web/styles.css` and web e2e source assertions |
+| HCAT-295 Build hybrid actual forecast table shell | `renderForecastTable()` and static `staticForecastTable()` |
+| HCAT-296 Populate actual units revenue cost cells | Actual bucket metrics in `buildForecastDashboardRow()` and dashboard table cells |
+| HCAT-297 Populate projected units revenue COGS cells | Forecast bucket metrics, effective values, and graph series |
+| HCAT-298 Add increment selector for days weeks months quarters years | Forecast increment select in `web/app.js`, API query handling, and CLI option |
+| HCAT-299 Add year over year comparison row | `.yoy-row` table rendering and bucket `yoy.units_delta`, `revenue_delta`, and percentages |
+| HCAT-300 Add inventory and demand graph series | `buildForecastDashboardGraph()` inventory/demand totals and Forecast graph bars |
+| HCAT-301 Add revenue cost and COGS graph series | Graph revenue, cost, and COGS series in API and web/static renderers |
+| HCAT-302 Add tooltip legend and axis formatting | Forecast graph labels, legends, bucket dates, and metric text in web/static demo |
+| HCAT-303 Coordinate chart and table selected period | Shared bucket labels and table/graph data from one dashboard payload |
+| HCAT-304 Run visual QA for dashboard | `npm run web:e2e`, `npm run pages:smoke`, and browser verification against `http://127.0.0.1:8770/` |
+| HCAT-305 Add dashboard core and API tests | `builds forecast dashboard overrides supply and experimentation contracts` and API smoke dashboard test |
+| HCAT-306 Add web and desktop smoke coverage | `scripts/web-e2e-smoke.mjs`, `scripts/desktop-smoke.mjs`, and shared web bundle |
+| HCAT-307 Document forecast dashboard | `docs/API.md`, `docs/RUNBOOK.md`, `docs/FEATURE_PARITY.md`, and `docs/OPERATOR_GUIDE.md` |
+| HCAT-308 Update GitHub Pages forecast dashboard demo | `scripts/build-pages-demo.mjs`, `docs/demo-site.js`, `docs/demo-site.css`, and `docs/demo-data.json.forecast_dashboard` |
+| HCAT-309 Record dashboard drain acceptance | Board event evidence, checkpoint, tests, and this traceability section |
+| HCAT-310 Track forecast lineage metadata | `runForecast()` `explanation.lineage` with created timestamp, source data refs, app, process, agent, methodology, granularity, and scope |
+| HCAT-311 Enable table forecast overrides | `/v1/forecasts/overrides`, CLI `forecast override`, and inline web override controls |
+| HCAT-312 Capture override reason and approval context | `reason_code`, `rationale`, `actor`, `generated_by`, and audit event metadata in `createForecastOverride()` |
+| HCAT-313 Factor overrides into visualization and subscribers | Effective dashboard bucket values, graph totals, and `/v1/forecasts/subscriber-payload` |
+| HCAT-314 Add override history rollback audit trail | `forecast_overrides` table status, `revertForecastOverride()`, `/v1/forecasts/overrides/revert`, and audit events |
+| HCAT-315 Compute time unit of supply | Bucket `supply.time_unit_supply`, `supplyRiskState()`, and table supply chips |
+| HCAT-316 Simulate purchase orders with delivery dates | `forecast_purchase_orders` table, seed data, CLI/API purchase-order commands, and dashboard receipt matching |
+| HCAT-317 Project inventory with supply on order | `projected_inventory_on_hand`, received PO units, and forward bucket inventory projections |
+| HCAT-318 Display supply on order units and time units | Dashboard buckets `supply.on_order_units` and `supply.on_order_time_units` plus table rendering |
+| HCAT-319 Add stockout and supply risk thresholds | `supplyRiskState()` and row-level `supply_risk` values |
+| HCAT-320 Add supply filters and sort controls | Web controls for supply sort, direction, in-stock, on-order, and API query parameters |
+| HCAT-321 Support AND OR supply filter logic | `matchesSupplyFilters()` and `supply_filter_logic` dashboard query state |
+| HCAT-322 Emit subscriber payloads for effective forecast supply | `/v1/forecasts/subscriber-payload`, CLI `forecast subscriber-payload`, and `forecast-effective-supply-subscriber-v1` |
+| HCAT-323 Add supply override tests and docs | Core/API tests plus `docs/API.md`, `docs/RUNBOOK.md`, and `docs/FEATURE_PARITY.md` |
+| HCAT-324 Record supply override drain acceptance | Board event evidence and test checkpoint for HCAT-310 through HCAT-324 |
+| HCAT-325 Define hierarchy and granularity contract | `forecastHierarchyContract()` levels and manipulation rules |
+| HCAT-326 Add granularity selector | API/CLI `granularity`, web selector, and category/brand/state/SKU grouping |
+| HCAT-327 Add top down and bottom up allocation scaffolding | Hierarchy contract `bottom_up`, `top_down`, and row `rollup` allocation data |
+| HCAT-328 Add cross level reconciliation scaffolding | `forecastHierarchyContract().reconciliation` and comparison payload reconciliation notes |
+| HCAT-329 Track manipulation lineage | Forecast lineage scope/granularity, override metadata, and plan promotion records |
+| HCAT-330 Create reusable assumption set schema | `forecast_assumption_sets` table and `defaultForecastAssumptionSets()` |
+| HCAT-331 Add assumption editor contract | `/v1/forecasts/assumption-sets`, CLI `forecast assumption-save`, and web experiment panel assumption list |
+| HCAT-332 Add API CLI assumption driven run contracts | `runForecast()` `assumption_set_id`, experiment API, and CLI `forecast experiment` |
+| HCAT-333 Inject model input assumptions into new runs | Merged assumption set, explicit assumptions, and scenario factors in `runForecast()` |
+| HCAT-334 Add sensitivity analysis scenario branching | `buildScenarioBranches()` and `forecastExperimentation().scenario_branches` |
+| HCAT-335 Track methodology metadata | `forecastMethodConfig()`, run lineage methodology, and comparison methodology summaries |
+| HCAT-336 Compare multiple forecast runs side by side | `compareForecastRuns()`, `/v1/forecasts/experiments/compare`, and CLI `forecast compare-runs` |
+| HCAT-337 Add methodology backtest metrics | Comparison ranking, confidence, bias proxy, and backtest summary metadata |
+| HCAT-338 Promote forecast plan of record | `forecast_plan_records` table, `/v1/forecasts/plan-of-record`, and CLI `forecast plan promote` |
+| HCAT-339 Show forecast run diffs | Comparison `deltas`, winner selection, and run comparison payloads |
+| HCAT-340 Build experimentation dashboard panel | `forecastExperimentation()`, web Forecast inspector panel, and static demo experiment snapshot |
+| HCAT-341 Include experimentation subscribers | `forecastSubscriberPayload()` and experimentation `subscriber_payload` evidence |
+| HCAT-342 Route Hapa card governance into forecast choices | Run lineage process keys and subscriber payloads for forecast/in-stock decision processes |
+| HCAT-343 Seed fixture data for experimentation | Seeded assumption sets, purchase orders, demo catalog rows, and generated experiment runs |
+| HCAT-344 Complete tests docs and drain acceptance | `npm test`, Pages/web smoke, updated docs, board event drain, and GitHub Pages demo refresh |

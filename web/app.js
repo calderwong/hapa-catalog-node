@@ -12,6 +12,17 @@ const state = {
   workbench: null,
   quality: null,
   ops: null,
+  forecastDashboard: null,
+  forecastExperimentation: null,
+  forecastFilters: {
+    granularity: 'sku',
+    increment: 'weeks',
+    sort_by: 'supply_time_units',
+    sort_direction: 'asc',
+    supply_logic: 'and',
+    in_stock: '',
+    on_order: ''
+  },
   hapaCards: null,
   activeCardId: '',
   dragCardId: '',
@@ -403,18 +414,203 @@ async function renderInventory() {
 
 async function renderForecasts() {
   useListMode();
-  els.listTitle.textContent = 'Forecasts';
-  const payload = await api('/v1/forecasts/runs');
-  els.listMeta.textContent = `${payload.forecast_runs.length} runs`;
-  els.list.innerHTML = payload.forecast_runs.map(run => `
-    <article class="row">
-      <div>
-        <strong>${escapeHtml(run.sku)}</strong>
-        <small>${escapeHtml(run.location)} / ${escapeHtml(run.channel)} / confidence ${Math.round((run.explanation.confidence || 0) * 100)}%</small>
+  els.listTitle.textContent = 'Forecast Dashboard';
+  els.listMeta.textContent = 'Loading forecast dashboard';
+  const params = new URLSearchParams({
+    ...state.forecastFilters,
+    category: state.filters.category,
+    brand: state.filters.brand,
+    state: state.filters.status
+  });
+  const [runs, dashboard, experimentation] = await Promise.all([
+    api('/v1/forecasts/runs'),
+    api(`/v1/forecasts/dashboard?${params.toString()}`),
+    api(`/v1/forecasts/experiments?${params.toString()}`)
+  ]);
+  state.forecastDashboard = dashboard;
+  state.forecastExperimentation = experimentation;
+  const rows = dashboard.table.rows.filter(row => [row.key, row.label, row.level, row.risk_state, ...(row.skus || [])]
+    .join(' ')
+    .toLowerCase()
+    .includes(els.searchInput.value.trim().toLowerCase()));
+  const visibleDashboard = { ...dashboard, table: { ...dashboard.table, rows } };
+  els.listMeta.textContent = `${rows.length} rows / ${runs.forecast_runs.length} runs / ${dashboard.purchase_orders.length} purchase orders`;
+  els.list.className = 'list forecast-dashboard';
+  els.list.innerHTML = `
+    ${renderForecastControls(dashboard)}
+    ${renderForecastGraph(dashboard.graph)}
+    ${renderForecastTable(visibleDashboard)}
+  `;
+  attachForecastDashboardInteractions(visibleDashboard);
+  renderForecastDashboardInspector(visibleDashboard, experimentation, runs.forecast_runs);
+}
+
+function renderForecastControls(dashboard) {
+  const filters = dashboard.filters || {};
+  const option = (value, label, selected) => `<option value="${escapeAttribute(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(label || value)}</option>`;
+  return `
+    <section class="forecast-controls" aria-label="Forecast controls">
+      <label>Level<select data-forecast-control="granularity">${(filters.granularities || []).map(value => option(value, value, state.forecastFilters.granularity)).join('')}</select></label>
+      <label>Increment<select data-forecast-control="increment">${(filters.increments || []).map(value => option(value, value, state.forecastFilters.increment)).join('')}</select></label>
+      <label>Sort<select data-forecast-control="sort_by">
+        <option value="">Default</option>
+        ${(filters.supply_sort_modes || []).map(value => option(value, value.replace(/_/g, ' '), state.forecastFilters.sort_by)).join('')}
+      </select></label>
+      <label>Direction<select data-forecast-control="sort_direction">
+        ${option('asc', 'Lowest first', state.forecastFilters.sort_direction)}
+        ${option('desc', 'Highest first', state.forecastFilters.sort_direction)}
+      </select></label>
+      <label>In stock<select data-forecast-control="in_stock">
+        ${option('', 'Any', state.forecastFilters.in_stock)}
+        ${option('true', 'In stock', state.forecastFilters.in_stock)}
+        ${option('false', 'Not in stock', state.forecastFilters.in_stock)}
+      </select></label>
+      <label>On order<select data-forecast-control="on_order">
+        ${option('', 'Any', state.forecastFilters.on_order)}
+        ${option('true', 'On order', state.forecastFilters.on_order)}
+        ${option('false', 'No order', state.forecastFilters.on_order)}
+      </select></label>
+      <label>Logic<select data-forecast-control="supply_logic">
+        ${option('and', 'AND', state.forecastFilters.supply_logic)}
+        ${option('or', 'OR', state.forecastFilters.supply_logic)}
+      </select></label>
+    </section>
+  `;
+}
+
+function renderForecastGraph(graph = {}) {
+  const series = graph.series || [];
+  const maxDemand = Math.max(1, ...series.map(point => Number(point.demand_units || 0)));
+  return `
+    <section class="forecast-graph" aria-label="Forecast visualization">
+      ${series.map(point => `
+        <article class="forecast-bar ${point.kind}">
+          <div class="bar-track"><span style="height:${Math.max(4, Math.round((point.demand_units / maxDemand) * 100))}%"></span></div>
+          <strong>${escapeHtml(point.label)}</strong>
+          <small>${Math.round(point.demand_units)} units / $${formatMoney(point.revenue)}</small>
+        </article>
+      `).join('')}
+    </section>
+  `;
+}
+
+function renderForecastTable(dashboard) {
+  const buckets = dashboard.table.buckets || [];
+  const rows = dashboard.table.rows || [];
+  return `
+    <section class="forecast-table-wrap" aria-label="Forecast actuals and projections">
+      <table class="forecast-table">
+        <thead>
+          <tr>
+            <th>Scope</th>
+            ${buckets.map(bucket => `<th><span>${escapeHtml(bucket.label)}</span><small>${escapeHtml(bucket.kind)}</small></th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((row, rowIndex) => `
+            <tr>
+              <th>
+                <strong>${escapeHtml(row.label)}</strong>
+                <small>${escapeHtml(row.level)} / ${row.sku_count} SKU / ${escapeHtml(row.risk_state)}</small>
+              </th>
+              ${row.buckets.map((bucket, bucketIndex) => renderForecastCell(row, bucket, rowIndex, bucketIndex)).join('')}
+            </tr>
+            <tr class="yoy-row">
+              <th>YoY</th>
+              ${row.buckets.map(bucket => `<td>${bucket.yoy.units_variance_percent > 0 ? '+' : ''}${bucket.yoy.units_variance_percent}%</td>`).join('')}
+            </tr>
+          `).join('') || `<tr><td colspan="${buckets.length + 1}">No forecast rows match the active filters.</td></tr>`}
+        </tbody>
+      </table>
+    </section>
+  `;
+}
+
+function renderForecastCell(row, bucket, rowIndex, bucketIndex) {
+  if (bucket.kind === 'actual') {
+    return `
+      <td class="actual-cell">
+        <strong>${Math.round(bucket.effective.units_sold || 0)}</strong>
+        <small>$${formatMoney(bucket.effective.revenue_sold)} rev</small>
+        <small>$${formatMoney(bucket.effective.total_cost)} cost</small>
+      </td>
+    `;
+  }
+  return `
+    <td class="forecast-cell">
+      <strong>${Math.round(bucket.effective.projected_units || 0)}</strong>
+      <small>$${formatMoney(bucket.effective.projected_revenue)} rev</small>
+      <small>${bucket.supply.on_hand_time_units} ${escapeHtml(bucket.supply.time_unit)} supply</small>
+      <small>${bucket.supply.on_order_units} on order</small>
+      <div class="override-row">
+        <input data-forecast-override-value="${rowIndex}:${bucketIndex}" type="number" inputmode="decimal" placeholder="Override" />
+        <button data-forecast-override="${rowIndex}:${bucketIndex}" aria-label="Apply forecast override">Apply</button>
       </div>
-      <span class="badge">${escapeHtml(run.status)}</span>
-    </article>
-  `).join('') || '<p class="empty">No forecast runs.</p>';
+    </td>
+  `;
+}
+
+function attachForecastDashboardInteractions(dashboard) {
+  els.list.querySelectorAll('[data-forecast-control]').forEach(control => {
+    control.addEventListener('change', () => {
+      state.forecastFilters[control.dataset.forecastControl] = control.value;
+      renderForecasts();
+    });
+  });
+  els.list.querySelectorAll('[data-forecast-override]').forEach(button => {
+    button.addEventListener('click', async () => {
+      const [rowIndex, bucketIndex] = button.dataset.forecastOverride.split(':').map(Number);
+      const row = dashboard.table.rows[rowIndex];
+      const bucket = row?.buckets[bucketIndex];
+      const input = els.list.querySelector(`[data-forecast-override-value="${rowIndex}:${bucketIndex}"]`);
+      const value = Number(input?.value || 0);
+      if (!row || !bucket || !Number.isFinite(value) || value <= 0) return;
+      await api('/v1/forecasts/overrides', {
+        method: 'POST',
+        body: JSON.stringify({
+          scope_level: row.level,
+          scope_key: row.key,
+          bucket_start: bucket.bucket_start,
+          bucket_end: bucket.bucket_end,
+          field: 'projected_units',
+          original_value: bucket.effective.projected_units,
+          value,
+          reason_code: 'operator_table_override',
+          rationale: `Web override for ${row.label} ${bucket.label}`,
+          actor: 'web-ui'
+        })
+      });
+      await renderForecasts();
+    });
+  });
+}
+
+function renderForecastDashboardInspector(dashboard, experimentation, runs = []) {
+  const firstRow = dashboard.table.rows[0];
+  const comparison = experimentation.comparison || {};
+  els.inspectorBody.innerHTML = `
+    <div class="kv"><span>Rows</span><strong>${dashboard.table.rows.length}</strong></div>
+    <div class="kv"><span>Increment</span><strong>${escapeHtml(dashboard.table.increment)}</strong></div>
+    <div class="kv"><span>Granularity</span><strong>${escapeHtml(dashboard.table.granularity)}</strong></div>
+    <div class="kv"><span>Runs</span><strong>${runs.length}</strong></div>
+    <div class="section">
+      <h3>Active Assumption Set</h3>
+      <p class="empty">${escapeHtml(dashboard.assumption_set?.name || 'No assumption set')}</p>
+    </div>
+    <div class="section">
+      <h3>Experimentation</h3>
+      ${renderList((experimentation.assumption_sets || []).slice(0, 4).map(set => `${set.name}: ${set.scope_level}/${set.scope_key}`))}
+      <div class="kv"><span>Comparison</span><strong>${escapeHtml(comparison.winner?.method || comparison.winner?.key || 'not run')}</strong></div>
+    </div>
+    <div class="section">
+      <h3>Supply Snapshot</h3>
+      ${firstRow ? renderList(firstRow.buckets.filter(bucket => bucket.kind === 'forecast').slice(0, 4).map(bucket => `${bucket.label}: ${bucket.supply.on_hand_time_units} ${bucket.supply.time_unit}, ${bucket.supply.risk_state}`)) : '<p class="empty">No rows.</p>'}
+    </div>
+    <div class="section">
+      <h3>Subscriber Payload</h3>
+      <p class="empty">${escapeHtml(dashboard.subscriber_payload.contract)} / ${dashboard.subscriber_payload.rows.length} rows / raw and effective values included.</p>
+    </div>
+  `;
 }
 
 async function renderMarket() {

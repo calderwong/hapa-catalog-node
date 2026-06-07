@@ -16,9 +16,8 @@ A card is done only when the implementation surface and verification evidence na
 
 ## Latest Snapshot
 
-- Checkpoint: `.hapaCatalog forecast experimentation granularity and methodology cycle filled`
-- Tasks: 284 done / 15 active / 45 backlog / 0 blocked
-- Events: 659 append-only events / 30 checkpoints
-- Ready: HCAT-285..289 forecast dashboard foundation, HCAT-310..314 forecast lineage/override controls, and HCAT-325..329 hierarchy, granularity, allocation, reconciliation, and manipulation lineage.
-- Backlog: HCAT-290..309 dashboard filter/table/graph/tests/docs work, HCAT-315..324 time-unit supply/on-order work, and HCAT-330..344 assumption sets, assumption-driven runs, methodology comparison, plan-of-record promotion, governance, fixture data, docs/tests, and drain acceptance.
-- Evidence: append-only board refill plus roadmap coverage in `docs/NEXT_WORK_CYCLE.md`.
+- Checkpoint: `.hapaCatalog forecast dashboard and experimentation board drained`
+- Tasks: 344 done / 0 active / 0 backlog / 0 blocked
+- Events: 720 append-only events / 31 checkpoints
+- Scope drained: HCAT-285..344 forecast dashboard, filters, hybrid actuals/forecast table, YoY rows, graphing, lineage, overrides, supply on order, assumption sets, methodology comparison, plan-of-record promotion, subscriber payloads, docs, static demo, and tests.
+- Evidence: `npm test`, `npm run web:e2e`, `npm run pages:build`, `npm run pages:smoke`, CLI forecast dashboard smoke, docs parity updates, and append-only task move events.

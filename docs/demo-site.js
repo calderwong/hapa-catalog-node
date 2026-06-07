@@ -237,30 +237,68 @@ function renderCards() {
 }
 
 function renderForecast() {
-  const rows = demo.forecast_runs.filter(run => [run.sku, run.location, run.channel, run.status].join(' ').toLowerCase().includes(state.query));
-  els.listTitle.textContent = 'Forecast Runs';
-  els.listMeta.textContent = `${rows.length} runs in snapshot`;
-  els.list.className = 'list';
-  els.list.innerHTML = rows.slice(0, 40).map(run => `
-    <article class="row">
-      <div>
-        <strong>${escapeHtml(run.sku)}</strong>
-        <small>${escapeHtml(run.location)} / ${escapeHtml(run.channel)} / confidence ${Math.round(((run.explanation || {}).confidence || 0) * 100)}%</small>
-      </div>
-      <span class="badge">${escapeHtml(run.status)}</span>
-    </article>
-  `).join('') || '<p class="empty">No forecast runs.</p>';
+  const dashboard = demo.forecast_dashboard;
+  const rows = (dashboard.table.rows || []).filter(row => [row.key, row.label, row.level, row.risk_state, ...(row.skus || [])].join(' ').toLowerCase().includes(state.query));
+  els.listTitle.textContent = 'Forecast Dashboard';
+  els.listMeta.textContent = `${rows.length} rows / ${demo.forecast_runs.length} runs / ${dashboard.purchase_orders.length} purchase orders`;
+  els.list.className = 'list forecast-dashboard';
+  els.list.innerHTML = `
+    ${staticForecastGraph(dashboard.graph)}
+    ${staticForecastTable({ ...dashboard, table: { ...dashboard.table, rows } })}
+  `;
   els.inspectorBadge.textContent = 'forecast';
   els.inspectorBody.innerHTML = `
     ${kv('Forecasts', demo.summary.forecast_runs)}
     ${kv('Actuals', demo.summary.forecast_actuals)}
     ${kv('Quality events', demo.summary.forecast_quality_events)}
+    ${kv('Assumption sets', demo.forecast_experimentation.assumption_sets.length)}
+    ${kv('Plan records', demo.forecast_experimentation.plan_records.length)}
     <div class="section">
-      <h3>Demand Diversity</h3>
-      ${kv('Sales 30d avg', demo.demo_fixture.diversity.sales_30d.average)}
-      ${kv('Lead time avg', `${demo.demo_fixture.diversity.lead_time_days.average} days`)}
-      ${kv('Below reorder', demo.demo_fixture.diversity.reorder.below_reorder)}
+      <h3>Active Assumption Set</h3>
+      <p class="empty">${escapeHtml(dashboard.assumption_set?.name || 'No assumption set')}</p>
     </div>
+    <div class="section">
+      <h3>Methodology Comparison</h3>
+      <p class="empty">${escapeHtml(demo.forecast_experimentation.comparison?.winner?.method || demo.forecast_experimentation.comparison?.winner?.key || 'Comparison available after local experiment run.')}</p>
+    </div>
+  `;
+}
+
+function staticForecastGraph(graph = {}) {
+  const series = graph.series || [];
+  const maxDemand = Math.max(1, ...series.map(point => Number(point.demand_units || 0)));
+  return `
+    <section class="forecast-graph">
+      ${series.map(point => `
+        <article class="forecast-bar ${point.kind}">
+          <div class="bar-track"><span style="height:${Math.max(4, Math.round((point.demand_units / maxDemand) * 100))}%"></span></div>
+          <strong>${escapeHtml(point.label)}</strong>
+          <small>${Math.round(point.demand_units)} units / $${formatMoney(point.revenue)}</small>
+        </article>
+      `).join('')}
+    </section>
+  `;
+}
+
+function staticForecastTable(dashboard) {
+  const buckets = dashboard.table.buckets || [];
+  return `
+    <section class="forecast-table-wrap">
+      <table class="forecast-table">
+        <thead><tr><th>Scope</th>${buckets.map(bucket => `<th><span>${escapeHtml(bucket.label)}</span><small>${escapeHtml(bucket.kind)}</small></th>`).join('')}</tr></thead>
+        <tbody>
+          ${(dashboard.table.rows || []).slice(0, 12).map(row => `
+            <tr>
+              <th><strong>${escapeHtml(row.label)}</strong><small>${escapeHtml(row.level)} / ${row.sku_count} SKU / ${escapeHtml(row.risk_state)}</small></th>
+              ${row.buckets.map(bucket => bucket.kind === 'actual'
+                ? `<td class="actual-cell"><strong>${Math.round(bucket.effective.units_sold || 0)}</strong><small>$${formatMoney(bucket.effective.revenue_sold)} rev</small><small>$${formatMoney(bucket.effective.total_cost)} cost</small></td>`
+                : `<td class="forecast-cell"><strong>${Math.round(bucket.effective.projected_units || 0)}</strong><small>$${formatMoney(bucket.effective.projected_revenue)} rev</small><small>${bucket.supply.on_hand_time_units} ${escapeHtml(bucket.supply.time_unit)} supply</small><small>${bucket.supply.on_order_units} on order</small></td>`).join('')}
+            </tr>
+            <tr class="yoy-row"><th>YoY</th>${row.buckets.map(bucket => `<td>${bucket.yoy.units_variance_percent > 0 ? '+' : ''}${bucket.yoy.units_variance_percent}%</td>`).join('')}</tr>
+          `).join('') || `<tr><td colspan="${buckets.length + 1}">No forecast dashboard rows.</td></tr>`}
+        </tbody>
+      </table>
+    </section>
   `;
 }
 

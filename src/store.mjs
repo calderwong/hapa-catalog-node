@@ -509,6 +509,67 @@ export class CatalogStore {
         metrics TEXT NOT NULL DEFAULT '{}',
         created_at TEXT NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS forecast_assumption_sets (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        version TEXT NOT NULL DEFAULT 'assumption-set-v1',
+        scope_level TEXT NOT NULL DEFAULT 'portfolio',
+        scope_key TEXT NOT NULL DEFAULT '*',
+        assumptions TEXT NOT NULL DEFAULT '{}',
+        created_by TEXT NOT NULL DEFAULT 'system',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS forecast_overrides (
+        id TEXT PRIMARY KEY,
+        run_id TEXT REFERENCES forecast_runs(id),
+        sku_id TEXT REFERENCES skus(id),
+        scope_level TEXT NOT NULL DEFAULT 'sku',
+        scope_key TEXT NOT NULL DEFAULT '',
+        bucket_start TEXT NOT NULL,
+        bucket_end TEXT NOT NULL,
+        field TEXT NOT NULL,
+        original_value REAL NOT NULL DEFAULT 0,
+        override_value REAL NOT NULL DEFAULT 0,
+        effective_value REAL NOT NULL DEFAULT 0,
+        reason_code TEXT NOT NULL,
+        rationale TEXT NOT NULL,
+        actor TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        source_context TEXT NOT NULL DEFAULT '{}',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        reverted_at TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_forecast_overrides_scope ON forecast_overrides(scope_level, scope_key, field, status);
+      CREATE TABLE IF NOT EXISTS forecast_purchase_orders (
+        id TEXT PRIMARY KEY,
+        sku_id TEXT NOT NULL REFERENCES skus(id),
+        supplier_id TEXT REFERENCES suppliers(id),
+        units REAL NOT NULL DEFAULT 0,
+        unit_cost REAL NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'open',
+        order_date TEXT NOT NULL,
+        expected_delivery_date TEXT NOT NULL,
+        receiving_bucket TEXT NOT NULL,
+        metadata TEXT NOT NULL DEFAULT '{}',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS forecast_plan_records (
+        id TEXT PRIMARY KEY,
+        run_id TEXT REFERENCES forecast_runs(id),
+        comparison_id TEXT REFERENCES forecast_model_comparisons(id),
+        scope_level TEXT NOT NULL DEFAULT 'sku',
+        scope_key TEXT NOT NULL DEFAULT '',
+        horizon_days INTEGER NOT NULL DEFAULT 30,
+        status TEXT NOT NULL DEFAULT 'active',
+        approver TEXT NOT NULL,
+        rationale TEXT NOT NULL,
+        superseded_run_id TEXT REFERENCES forecast_runs(id),
+        subscriber_payload TEXT NOT NULL DEFAULT '{}',
+        created_at TEXT NOT NULL
+      );
       CREATE TABLE IF NOT EXISTS market_provider_runs (
         id TEXT PRIMARY KEY,
         provider TEXT NOT NULL,
@@ -2358,6 +2419,165 @@ export class CatalogStore {
     `).all(sku, sku, sku, limit).map(row => decodeJsonFields(row, ['models', 'winner', 'metrics']));
   }
 
+  upsertForecastAssumptionSet({ id = '', name, version = 'assumption-set-v1', scope_level = 'portfolio', scope_key = '*', assumptions = {}, created_by = 'system' }) {
+    const ts = nowIso();
+    const assumptionId = id || makeId('fassume');
+    this.db.prepare(`
+      INSERT INTO forecast_assumption_sets (id, name, version, scope_level, scope_key, assumptions, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        version = excluded.version,
+        scope_level = excluded.scope_level,
+        scope_key = excluded.scope_key,
+        assumptions = excluded.assumptions,
+        created_by = excluded.created_by,
+        updated_at = excluded.updated_at
+    `).run(assumptionId, name || assumptionId, version, scope_level, scope_key, encode(assumptions), created_by, ts, ts);
+    return this.getForecastAssumptionSet(assumptionId);
+  }
+
+  getForecastAssumptionSet(id) {
+    const row = this.db.prepare('SELECT * FROM forecast_assumption_sets WHERE id = ?').get(id);
+    return row ? decodeJsonFields(row, ['assumptions']) : null;
+  }
+
+  listForecastAssumptionSets({ scope_level = '', scope_key = '', limit = 100 } = {}) {
+    return this.db.prepare(`
+      SELECT * FROM forecast_assumption_sets
+      WHERE (? = '' OR scope_level = ?)
+        AND (? = '' OR scope_key = ?)
+      ORDER BY updated_at DESC, name
+      LIMIT ?
+    `).all(scope_level, scope_level, scope_key, scope_key, limit).map(row => decodeJsonFields(row, ['assumptions']));
+  }
+
+  createForecastOverride({ run_id = null, sku_id = null, scope_level = 'sku', scope_key = '', bucket_start, bucket_end, field, original_value = 0, override_value = 0, effective_value = null, reason_code, rationale, actor = 'local_operator', status = 'active', source_context = {} }) {
+    const id = makeId('foverride');
+    const ts = nowIso();
+    this.db.prepare(`
+      INSERT INTO forecast_overrides (id, run_id, sku_id, scope_level, scope_key, bucket_start, bucket_end, field, original_value, override_value, effective_value, reason_code, rationale, actor, status, source_context, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, run_id, sku_id, scope_level, scope_key, bucket_start, bucket_end, field, Number(original_value || 0), Number(override_value || 0), Number(effective_value ?? override_value ?? 0), reason_code, rationale, actor, status, encode(source_context), ts, ts);
+    return this.getForecastOverride(id);
+  }
+
+  getForecastOverride(id) {
+    const row = this.db.prepare(`
+      SELECT fo.*, s.sku, s.name AS sku_name
+      FROM forecast_overrides fo
+      LEFT JOIN skus s ON s.id = fo.sku_id
+      WHERE fo.id = ?
+    `).get(id);
+    return row ? decodeForecastOverride(row) : null;
+  }
+
+  listForecastOverrides({ sku = '', scope_level = '', scope_key = '', status = '', limit = 500 } = {}) {
+    return this.db.prepare(`
+      SELECT fo.*, s.sku, s.name AS sku_name
+      FROM forecast_overrides fo
+      LEFT JOIN skus s ON s.id = fo.sku_id
+      WHERE (? = '' OR s.sku = ? OR s.id = ? OR fo.scope_key = ?)
+        AND (? = '' OR fo.scope_level = ?)
+        AND (? = '' OR fo.scope_key = ?)
+        AND (? = '' OR fo.status = ?)
+      ORDER BY fo.created_at DESC
+      LIMIT ?
+    `).all(sku, sku, sku, sku, scope_level, scope_level, scope_key, scope_key, status, status, limit).map(decodeForecastOverride);
+  }
+
+  revertForecastOverride({ id, actor = 'local_operator' }) {
+    const current = this.getForecastOverride(id);
+    if (!current) return null;
+    const ts = nowIso();
+    this.db.prepare(`
+      UPDATE forecast_overrides
+      SET status = 'reverted', updated_at = ?, reverted_at = ?
+      WHERE id = ?
+    `).run(ts, ts, id);
+    return this.getForecastOverride(id);
+  }
+
+  upsertForecastPurchaseOrder({ id = '', sku_id, supplier_id = null, units = 0, unit_cost = 0, status = 'open', order_date, expected_delivery_date, receiving_bucket, metadata = {} }) {
+    const ts = nowIso();
+    const poId = id || makeId('fpo');
+    this.db.prepare(`
+      INSERT INTO forecast_purchase_orders (id, sku_id, supplier_id, units, unit_cost, status, order_date, expected_delivery_date, receiving_bucket, metadata, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        sku_id = excluded.sku_id,
+        supplier_id = excluded.supplier_id,
+        units = excluded.units,
+        unit_cost = excluded.unit_cost,
+        status = excluded.status,
+        order_date = excluded.order_date,
+        expected_delivery_date = excluded.expected_delivery_date,
+        receiving_bucket = excluded.receiving_bucket,
+        metadata = excluded.metadata,
+        updated_at = excluded.updated_at
+    `).run(poId, sku_id, supplier_id, Number(units || 0), Number(unit_cost || 0), status, order_date, expected_delivery_date, receiving_bucket, encode(metadata), ts, ts);
+    return this.getForecastPurchaseOrder(poId);
+  }
+
+  getForecastPurchaseOrder(id) {
+    const row = this.db.prepare(`
+      SELECT fpo.*, s.sku, s.name AS sku_name, suppliers.name AS supplier_name
+      FROM forecast_purchase_orders fpo
+      JOIN skus s ON s.id = fpo.sku_id
+      LEFT JOIN suppliers ON suppliers.id = fpo.supplier_id
+      WHERE fpo.id = ?
+    `).get(id);
+    return row ? decodeForecastPurchaseOrder(row) : null;
+  }
+
+  listForecastPurchaseOrders({ sku = '', status = '', limit = 500 } = {}) {
+    return this.db.prepare(`
+      SELECT fpo.*, s.sku, s.name AS sku_name, suppliers.name AS supplier_name
+      FROM forecast_purchase_orders fpo
+      JOIN skus s ON s.id = fpo.sku_id
+      LEFT JOIN suppliers ON suppliers.id = fpo.supplier_id
+      WHERE (? = '' OR s.sku = ? OR s.id = ?)
+        AND (? = '' OR fpo.status = ?)
+      ORDER BY fpo.expected_delivery_date, s.sku
+      LIMIT ?
+    `).all(sku, sku, sku, status, status, limit).map(decodeForecastPurchaseOrder);
+  }
+
+  createForecastPlanRecord({ run_id = null, comparison_id = null, scope_level = 'sku', scope_key = '', horizon_days = 30, status = 'active', approver = 'local_operator', rationale = '', superseded_run_id = null, subscriber_payload = {} }) {
+    const id = makeId('fplan');
+    const ts = nowIso();
+    this.db.prepare(`
+      INSERT INTO forecast_plan_records (id, run_id, comparison_id, scope_level, scope_key, horizon_days, status, approver, rationale, superseded_run_id, subscriber_payload, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, run_id, comparison_id, scope_level, scope_key, Number(horizon_days || 30), status, approver, rationale, superseded_run_id, encode(subscriber_payload), ts);
+    return this.getForecastPlanRecord(id);
+  }
+
+  getForecastPlanRecord(id) {
+    const row = this.db.prepare(`
+      SELECT fpr.*, fr.status AS run_status, s.sku, s.name AS sku_name
+      FROM forecast_plan_records fpr
+      LEFT JOIN forecast_runs fr ON fr.id = fpr.run_id
+      LEFT JOIN skus s ON s.id = fr.sku_id
+      WHERE fpr.id = ?
+    `).get(id);
+    return row ? decodeJsonFields(row, ['subscriber_payload']) : null;
+  }
+
+  listForecastPlanRecords({ scope_level = '', scope_key = '', status = '', limit = 100 } = {}) {
+    return this.db.prepare(`
+      SELECT fpr.*, fr.status AS run_status, s.sku, s.name AS sku_name
+      FROM forecast_plan_records fpr
+      LEFT JOIN forecast_runs fr ON fr.id = fpr.run_id
+      LEFT JOIN skus s ON s.id = fr.sku_id
+      WHERE (? = '' OR fpr.scope_level = ?)
+        AND (? = '' OR fpr.scope_key = ?)
+        AND (? = '' OR fpr.status = ?)
+      ORDER BY fpr.created_at DESC
+      LIMIT ?
+    `).all(scope_level, scope_level, scope_key, scope_key, status, status, limit).map(row => decodeJsonFields(row, ['subscriber_payload']));
+  }
+
   createMarketProviderRun({ provider, lookup, status, cache_key = '', cacheKey = '', retry_after = null, retryAfter = null, warnings = [], metadata = {} }) {
     const id = makeId('provider');
     const ts = nowIso();
@@ -3134,6 +3354,10 @@ export class CatalogStore {
       forecast_runs: tableCount('forecast_runs'),
       forecast_actuals: tableCount('forecast_actuals'),
       forecast_quality_events: tableCount('forecast_quality_events'),
+      forecast_assumption_sets: tableCount('forecast_assumption_sets'),
+      forecast_overrides: tableCount('forecast_overrides'),
+      forecast_purchase_orders: tableCount('forecast_purchase_orders'),
+      forecast_plan_records: tableCount('forecast_plan_records'),
       market_price_snapshots: tableCount('market_price_snapshots'),
       market_price_points: tableCount('market_price_points'),
       market_listing_snapshots: tableCount('market_listing_snapshots'),
@@ -3290,6 +3514,25 @@ function decodeForecastQualityEvent(row) {
     bias: Number(row.bias || 0),
     percent_error: Number(row.percent_error || 0),
     stockout_impact: Number(row.stockout_impact || 0)
+  };
+}
+
+function decodeForecastOverride(row) {
+  return {
+    ...row,
+    original_value: Number(row.original_value || 0),
+    override_value: Number(row.override_value || 0),
+    effective_value: Number(row.effective_value || 0),
+    source_context: decode(row.source_context, {})
+  };
+}
+
+function decodeForecastPurchaseOrder(row) {
+  return {
+    ...row,
+    units: Number(row.units || 0),
+    unit_cost: Number(row.unit_cost || 0),
+    metadata: decode(row.metadata, {})
   };
 }
 

@@ -75,6 +75,8 @@ const selectedItem = items[0] ? core.getItem(items[0].sku).item : null;
 const demoFixture = core.demoCatalogRecords({ limit: 100 });
 const marketPrices = core.marketPrices({ limit: 120 });
 const marketListing = core.marketListingData({ limit: 120 });
+const forecastDashboard = core.forecastDashboard({ granularity: 'category', increment: 'weeks', sort_by: 'supply_time_units' });
+const forecastExperimentation = core.forecastExperimentation({ granularity: 'category', increment: 'weeks' });
 const board = core.kanbanBoard().board;
 const ops = core.opsOverview();
 const docs = core.docs().docs;
@@ -107,6 +109,8 @@ const payload = sanitize({
   selected_item: selectedItem,
   inventory: core.inventory({ limit: 120 }).positions,
   forecast_runs: core.store.listForecastRuns().slice(0, 40),
+  forecast_dashboard: forecastDashboard,
+  forecast_experimentation: forecastExperimentation,
   market: {
     snapshots: marketPrices.snapshots,
     points: marketPrices.points,

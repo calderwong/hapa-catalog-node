@@ -22,6 +22,13 @@ assert.ok(data.board.summary.active + data.board.summary.backlog >= 0);
 assert.ok(data.docs.some(doc => doc.id === 'GITHUB_PAGES_DEMO'));
 assert.ok(data.capabilities.supported_operations.includes('next_cycle.parity_docs_ui.run'));
 assert.ok(data.demo_fixture.diversity.categories.length >= 8);
+assert.equal(data.forecast_dashboard.ok, true);
+assert.equal(data.forecast_dashboard.table.buckets.length, 12);
+assert.ok(data.forecast_dashboard.table.rows.length >= 8);
+assert.ok(data.forecast_dashboard.graph.series.length >= 12);
+assert.ok(data.forecast_dashboard.purchase_orders.length >= 40);
+assert.equal(data.forecast_experimentation.ok, true);
+assert.ok(data.forecast_experimentation.assumption_sets.length >= 3);
 assert.equal(dataText.includes('/Users/'), false);
 if (data.screenshot) assert.ok(existsSync(join(docsDir, data.screenshot)));
 

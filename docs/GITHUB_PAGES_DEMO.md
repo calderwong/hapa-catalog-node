@@ -11,8 +11,9 @@ The hosted GitHub Pages site is a read-only `.hapaCatalog` demo snapshot. It is 
 ## What The Demo Shows
 
 - 100+ SKU item master browsing with category, brand, status, and text filters.
-- Drained Hapa board evidence with 284 of 284 cards complete.
+- Drained Hapa board evidence with 344 of 344 cards complete after the forecast dashboard and experimentation drain.
 - Hapa Avatar and Protocol card placement examples.
+- Forecast dashboard snapshot with filters, hybrid actuals/forecast table, YoY rows, supply metrics, graph series, overrides, assumptions, and experimentation comparisons.
 - Forecast run, fixture diversity, inventory, and operations telemetry.
 - Documentation manifest with API, CLI, web, desktop, and board traceability.
 

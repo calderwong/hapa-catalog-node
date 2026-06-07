@@ -52,9 +52,19 @@ if (command === 'help') {
       'item get <id-or-sku>',
       'inventory position --sku <sku>',
       'forecast run --sku <sku> [--location <location>] [--dry-run]',
+      'forecast dashboard [--sku <sku>] [--granularity sku|category|brand|portfolio] [--increment days|weeks|months|quarters|years]',
       'forecast explain <run_id>',
       'forecast actuals --file <path>',
       'forecast quality [--sku <sku>]',
+      'forecast assumptions [--scope-level <level>]',
+      'forecast assumption-save --file <path>',
+      'forecast purchase-orders [--sku <sku>]',
+      'forecast purchase-order --sku <sku> --units <n> --expected-delivery-date <date>',
+      'forecast override --sku <sku> --bucket-start <iso> --field <field> --value <n> --reason-code <code> --rationale <text>',
+      'forecast subscriber-payload [--sku <sku>]',
+      'forecast experiment --sku <sku>',
+      'forecast compare-runs --run-ids <id,id>',
+      'forecast plan promote --run-id <id> --rationale <text>',
       'digital list [--sku <sku>]',
       'mdm detect [--threshold <0-1>]',
       'mdm duplicates',
@@ -200,7 +210,26 @@ if (command === 'help') {
     location: flag('--location', 'main-bin'),
     channel: flag('--channel', 'default'),
     horizon_days: Number(flag('--horizon-days', 30)),
+    assumption_set_id: flag('--assumption-set-id', ''),
+    generated_by: flag('--generated-by', 'cli'),
+    process_key: flag('--process-key', 'forecast.cycle'),
+    methodology: { key: flag('--methodology', 'hapa-deterministic-baseline-v2') },
     dryRun: has('--dry-run'),
+    actor: flag('--actor', 'cli')
+  }));
+} else if (command === 'forecast' && args[1] === 'dashboard') {
+  await withCore(core => core.forecastDashboard({
+    sku: flag('--sku', ''),
+    category: flag('--category', ''),
+    brand: flag('--brand', ''),
+    state: flag('--state', ''),
+    granularity: flag('--granularity', 'sku'),
+    increment: flag('--increment', 'weeks'),
+    sort_by: flag('--sort-by', ''),
+    sort_direction: flag('--sort-direction', 'asc'),
+    in_stock: flag('--in-stock', ''),
+    on_order: flag('--on-order', ''),
+    supply_logic: flag('--supply-logic', 'and'),
     actor: flag('--actor', 'cli')
   }));
 } else if (command === 'forecast' && args[1] === 'explain') {
@@ -223,6 +252,80 @@ if (command === 'help') {
   await withCore(core => core.forecastQuality({
     sku: flag('--sku', ''),
     limit: Number(flag('--limit', 100))
+  }));
+} else if (command === 'forecast' && args[1] === 'assumptions') {
+  await withCore(core => core.forecastAssumptionSets({
+    scope_level: flag('--scope-level', ''),
+    scope_key: flag('--scope-key', ''),
+    limit: Number(flag('--limit', 100)),
+    actor: flag('--actor', 'cli')
+  }));
+} else if (command === 'forecast' && args[1] === 'assumption-save') {
+  const file = flag('--file');
+  if (!file) {
+    print({ ok: false, error_code: 'missing_file', message: '--file is required' });
+    process.exitCode = 1;
+  } else {
+    const body = await readJsonFile(file);
+    await withCore(core => core.saveForecastAssumptionSet({ ...body, actor: flag('--actor', body.actor || 'cli') }));
+  }
+} else if (command === 'forecast' && args[1] === 'purchase-orders') {
+  await withCore(core => core.forecastPurchaseOrders({
+    sku: flag('--sku', ''),
+    status: flag('--status', ''),
+    limit: Number(flag('--limit', 100))
+  }));
+} else if (command === 'forecast' && args[1] === 'purchase-order') {
+  await withCore(core => core.saveForecastPurchaseOrder({
+    sku: flag('--sku', ''),
+    units: Number(flag('--units', 0)),
+    unit_cost: Number(flag('--unit-cost', 0)),
+    status: flag('--status', 'open'),
+    expected_delivery_date: flag('--expected-delivery-date', ''),
+    actor: flag('--actor', 'cli')
+  }));
+} else if (command === 'forecast' && args[1] === 'override') {
+  await withCore(core => core.createForecastOverride({
+    sku: flag('--sku', ''),
+    scope_level: flag('--scope-level', 'sku'),
+    scope_key: flag('--scope-key', flag('--sku', '')),
+    bucket_start: flag('--bucket-start', ''),
+    bucket_end: flag('--bucket-end', flag('--bucket-start', '')),
+    field: flag('--field', 'projected_units'),
+    value: Number(flag('--value', flag('--override-value', 0))),
+    reason_code: flag('--reason-code', ''),
+    rationale: flag('--rationale', ''),
+    actor: flag('--actor', 'cli')
+  }));
+} else if (command === 'forecast' && args[1] === 'subscriber-payload') {
+  await withCore(core => core.forecastSubscriberPayload({
+    sku: flag('--sku', ''),
+    granularity: flag('--granularity', 'sku'),
+    increment: flag('--increment', 'weeks'),
+    actor: flag('--actor', 'cli')
+  }));
+} else if (command === 'forecast' && args[1] === 'experiment') {
+  await withCore(core => core.runForecastExperiment({
+    sku: flag('--sku', ''),
+    location: flag('--location', 'main-bin'),
+    channel: flag('--channel', 'default'),
+    granularity: flag('--granularity', 'sku'),
+    actor: flag('--actor', 'cli')
+  }));
+} else if (command === 'forecast' && args[1] === 'compare-runs') {
+  await withCore(core => core.compareForecastRuns({
+    run_ids: String(flag('--run-ids', '')).split(',').filter(Boolean),
+    sku: flag('--sku', ''),
+    actor: flag('--actor', 'cli')
+  }));
+} else if (command === 'forecast' && args[1] === 'plan' && args[2] === 'promote') {
+  await withCore(core => core.promoteForecastPlan({
+    run_id: flag('--run-id', ''),
+    scope_level: flag('--scope-level', 'sku'),
+    scope_key: flag('--scope-key', ''),
+    rationale: flag('--rationale', 'CLI plan-of-record promotion'),
+    approver: flag('--approver', flag('--actor', 'cli')),
+    actor: flag('--actor', 'cli')
   }));
 } else if (command === 'digital' && args[1] === 'list') {
   await withCore(core => core.digitalProducts({

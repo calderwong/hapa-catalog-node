@@ -35,6 +35,18 @@ Authenticated:
 - `POST /v1/forecasts/scenarios`
 - `POST /v1/forecasts/actuals`
 - `GET /v1/forecasts/quality`
+- `GET /v1/forecasts/dashboard`
+- `GET /v1/forecasts/assumption-sets`
+- `POST /v1/forecasts/assumption-sets`
+- `GET /v1/forecasts/purchase-orders`
+- `POST /v1/forecasts/purchase-orders`
+- `POST /v1/forecasts/overrides`
+- `POST /v1/forecasts/overrides/revert`
+- `GET /v1/forecasts/subscriber-payload`
+- `GET /v1/forecasts/experiments`
+- `POST /v1/forecasts/experiments/run`
+- `POST /v1/forecasts/experiments/compare`
+- `POST /v1/forecasts/plan-of-record`
 - `GET /v1/mdm/duplicates`
 - `POST /v1/mdm/detect-duplicates`
 - `POST /v1/mdm/merge`
@@ -200,6 +212,27 @@ Workbench and quality:
 - Digital products: `/v1/digital-products`.
 - Forecast actuals and quality: `/v1/forecasts/actuals`, `/v1/forecasts/quality`.
 - Connector and performance scaffolds: `/v1/connectors/contracts`, `/v1/connectors/validate`, `/v1/connectors/run`, `/v1/connectors/runs`, `/v1/performance/reports`.
+
+Forecast dashboard and experimentation:
+
+```bash
+curl -H "Authorization: Bearer $HAPA_CATALOG_TOKEN" \
+  "http://127.0.0.1:8768/v1/forecasts/dashboard?increment=weeks&granularity=category&sort_by=supply_time_units"
+
+curl -X POST -H "Authorization: Bearer $HAPA_CATALOG_TOKEN" -H "Content-Type: application/json" \
+  -d '{"scope_type":"sku","scope_id":"ALPHA-RING-9","bucket_start":"2026-07-19","metric":"projected_units","override_value":42,"reason_code":"pilot_adjustment","rationale":"Design partner expects promo lift."}' \
+  http://127.0.0.1:8768/v1/forecasts/overrides
+
+curl -X POST -H "Authorization: Bearer $HAPA_CATALOG_TOKEN" -H "Content-Type: application/json" \
+  -d '{"sku":"ALPHA-RING-9","methods":["baseline","seasonal","promotion"],"assumption_set_id":"assumption-seasonal-promo"}' \
+  http://127.0.0.1:8768/v1/forecasts/experiments/run
+```
+
+`GET /v1/forecasts/dashboard` returns filter metadata, a graph series, and a hybrid table whose first half is trailing actuals and second half is forecast. Forecast buckets include projected units, revenue, COGS, projected inventory, on-order units, time-unit supply, YoY comparison, applied override evidence, and lineage references. The same query accepts `category`, `brand`, `state`, `sku`, `increment`, `granularity`, `assumption_set_id`, `sort_by`, `sort_direction`, `supply_in_stock`, `supply_on_order`, and `supply_filter_logic`.
+
+`POST /v1/forecasts/overrides` requires `reason_code` and `rationale`. Overrides update dashboard table values, graph totals, and `/v1/forecasts/subscriber-payload`. `POST /v1/forecasts/overrides/revert` marks an override reverted without deleting history.
+
+Assumption sets and purchase orders are managed with `/v1/forecasts/assumption-sets` and `/v1/forecasts/purchase-orders`. Experiment routes run assumption-driven methodologies, compare multiple forecast runs, promote a plan of record, and expose the effective subscriber payload for downstream in-stock and planning processes.
 
 Operations:
 

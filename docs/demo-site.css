@@ -400,6 +400,119 @@ small {
   line-height: 1.35;
 }
 
+.forecast-dashboard {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  overflow: hidden;
+}
+
+.forecast-graph {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(78px, 1fr);
+  gap: 8px;
+  min-height: 136px;
+  overflow-x: auto;
+  padding: 8px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.48);
+}
+
+.forecast-bar {
+  display: grid;
+  grid-template-rows: 78px auto auto;
+  gap: 4px;
+  min-width: 0;
+  font-size: 11px;
+}
+
+.forecast-bar strong,
+.forecast-bar small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forecast-bar small,
+.forecast-table small {
+  color: var(--muted);
+}
+
+.bar-track {
+  display: flex;
+  align-items: end;
+  min-height: 78px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.72);
+  overflow: hidden;
+}
+
+.bar-track span {
+  display: block;
+  width: 100%;
+  background: linear-gradient(180deg, var(--cyan), var(--green));
+}
+
+.forecast-bar.actual .bar-track span {
+  background: linear-gradient(180deg, var(--gold), var(--cyan));
+}
+
+.forecast-table-wrap {
+  overflow: auto;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.48);
+}
+
+.forecast-table {
+  width: max(980px, 100%);
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.forecast-table th,
+.forecast-table td {
+  min-width: 118px;
+  max-width: 156px;
+  padding: 8px;
+  border-bottom: 1px solid rgba(125, 211, 252, 0.12);
+  border-right: 1px solid rgba(125, 211, 252, 0.08);
+  vertical-align: top;
+}
+
+.forecast-table th:first-child {
+  position: sticky;
+  left: 0;
+  min-width: 165px;
+  background: rgba(2, 6, 23, 0.96);
+}
+
+.forecast-table thead th {
+  color: var(--cyan);
+  background: rgba(15, 23, 42, 0.92);
+}
+
+.forecast-table th span,
+.forecast-table th small,
+.forecast-table td small {
+  display: block;
+}
+
+.forecast-cell strong,
+.actual-cell strong {
+  color: var(--gold);
+}
+
+.yoy-row td,
+.yoy-row th {
+  color: var(--muted);
+  font-size: 11px;
+  background: rgba(15, 23, 42, 0.38);
+}
+
 .checkpoint,
 .surface-status {
   padding: 12px;

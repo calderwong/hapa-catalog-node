@@ -41,6 +41,10 @@ node bin/hapa-catalog.mjs mapping save --file data/fixtures/supplier_mapping.jso
 node bin/hapa-catalog.mjs mapping preview --mapping-file data/fixtures/supplier_mapping.json --records-file data/fixtures/supplier_source.json
 node bin/hapa-catalog.mjs items search alpha
 node bin/hapa-catalog.mjs forecast run --sku ALPHA-RING-9 --location main-bin
+node bin/hapa-catalog.mjs forecast dashboard --increment weeks --granularity category
+node bin/hapa-catalog.mjs forecast override --sku ALPHA-RING-9 --bucket-start 2026-07-19 --metric projected_units --value 42 --reason-code pilot_adjustment --rationale "Design partner expects promo lift"
+node bin/hapa-catalog.mjs forecast experiment --sku ALPHA-RING-9 --methods baseline seasonal promotion --assumption-set-id assumption-seasonal-promo
+node bin/hapa-catalog.mjs forecast subscriber-payload --granularity sku
 node bin/hapa-catalog.mjs forecast actuals --file actuals.json
 node bin/hapa-catalog.mjs forecast quality --sku ALPHA-RING-9
 node bin/hapa-catalog.mjs market retrieve --upc 075375927016
@@ -102,6 +106,12 @@ The post-MVP board phases are represented by tested local-first operations surfa
 
 Use the web/desktop `Ops` tab, API `/v1/ops`, or CLI `ops overview` to inspect all operations rows.
 
+## Forecast Dashboard And Experimentation
+
+The Forecasts surface now includes a filterable planning dashboard for category, brand, state, and SKU review. Operators can switch day, week, month, quarter, or year increments; view trailing actual units, revenue, and cost beside projected units, revenue, and COGS; compare YoY rows; inspect inventory, demand, revenue, cost, and supply graph series; and sort/filter by in-stock supply or simulated supply on order.
+
+Forecast overrides require a reason code and rationale, preserve original/effective values, and flow into the table, graph, subscriber payloads, and audit evidence. Assumption sets, purchase orders, methodology comparisons, scenario branches, hierarchy/granularity contracts, and plan-of-record promotion are exposed through API, CLI, web, desktop, and the static Pages snapshot.
+
 ## Next Cycle Drain
 
 Review-readiness and pilot-prep phases are implemented as repeatable evidence generators. `POST /v1/next-cycle/run`, CLI `next-cycle run`, and the web/desktop Ops `Drain` button create artifacts for HCAT-062 through HCAT-089: review packets, connector pilot scaffolds, governance workflows, intelligence workbench artifacts, release hardening records, and passed test-run rows.
@@ -121,6 +131,8 @@ The web/desktop Ops `Next` button and CLI `next-cycle run --phase review-next` c
 The web/desktop Ops `Operate` button and CLI `next-cycle run --phase review-operating` create artifacts and operational rows for HCAT-235 through HCAT-259: review room operating sessions, design partner pilot entry, production reliability slices, governed agent runtime enforcement, commercial signoff, release gates, and follow-on drain goal criteria.
 
 The web/desktop Ops `Parity` button and CLI `next-cycle run --phase parity-docs-ui` create artifacts and operational rows for HCAT-260 through HCAT-284: UI/CLI/API parity audits, documentation completion, 100-SKU demo data validation, item filter and Ops grouping UI polish, screenshot/desktop/performance QA, traceability refresh, and next-drain acceptance criteria.
+
+The forecast dashboard and experimentation drain completes HCAT-285 through HCAT-344: dashboard data model, filters, hybrid table, YoY calculations, graphing, lineage, overrides, time-unit supply, purchase-order simulation, supply-aware sorting, hierarchy/granularity manipulation, reusable assumption sets, methodology comparison, plan-of-record promotion, subscriber payloads, fixture data, docs, and tests.
 
 Artifacts are readable through `/v1/next-cycle/artifacts`, CLI `next-cycle artifacts`, and the Ops tab. Automated coverage includes `npm test`, `node bin/hapa-catalog.mjs self-test`, and `npm run web:e2e`.
 
@@ -155,7 +167,7 @@ Published site:
 https://calderwong.github.io/hapa-catalog-node/
 ```
 
-The Pages site shows item master browsing, the drained 284-card board, Hapa card placement examples, forecast and operations telemetry, and documentation links. Authenticated writes, live market retrieval, SQLite persistence, Electron, and board-drain operations require the local loopback node. Details live in `docs/GITHUB_PAGES_DEMO.md`.
+The Pages site shows item master browsing, the drained 344-card board, Hapa card placement examples, forecast dashboard and experimentation telemetry, operations telemetry, and documentation links. Authenticated writes, live market retrieval, SQLite persistence, Electron, and board-drain operations require the local loopback node. Details live in `docs/GITHUB_PAGES_DEMO.md`.
 
 ## Hapa Board
 

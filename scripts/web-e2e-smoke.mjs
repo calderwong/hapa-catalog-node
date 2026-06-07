@@ -57,7 +57,11 @@ try {
   assert.ok(html.includes('brandFilter'));
   assert.ok(html.includes('statusFilter'));
   assert.ok(app.includes('/v1/fixtures/demo-catalog-100/import'));
+  assert.ok(app.includes('/v1/forecasts/dashboard'));
+  assert.ok(app.includes('/v1/forecasts/overrides'));
+  assert.ok(app.includes('/v1/forecasts/experiments'));
   assert.ok(app.includes('ops-action-group'));
+  assert.ok(app.includes('forecast-dashboard'));
   for (const label of ['Board', 'Items', 'Inventory', 'Forecasts', 'Market', 'Workbench', 'Quality', 'Ops', 'Governance', 'Cards', 'Audit']) {
     assert.ok(html.includes(`>${label}<`), `Missing nav label ${label}`);
   }
@@ -87,6 +91,19 @@ try {
   }).then(response => response.json());
   assert.equal(demoImported.ok, true);
   assert.equal(demoImported.totals.valid, 100);
+
+  const dashboard = await fetch(`${handle.url}/v1/forecasts/dashboard?granularity=category&increment=weeks`, { headers: auth }).then(response => response.json());
+  assert.equal(dashboard.ok, true);
+  assert.equal(dashboard.table.buckets.length, 12);
+  assert.ok(dashboard.table.rows.length >= 8);
+
+  const experiment = await fetch(`${handle.url}/v1/forecasts/experiments/run`, {
+    method: 'POST',
+    headers: { ...auth, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sku: 'DEMO-WEAR-001', actor: 'web-e2e' })
+  }).then(response => response.json());
+  assert.equal(experiment.ok, true);
+  assert.equal(experiment.runs.length, 4);
 
   const drained = await fetch(`${handle.url}/v1/next-cycle/run`, {
     method: 'POST',

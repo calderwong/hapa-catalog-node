@@ -204,6 +204,14 @@ export class CatalogCore {
         'next_cycle.review_next.run',
         'next_cycle.review_operating.run',
         'next_cycle.parity_docs_ui.run',
+        'forecast.dashboard.read',
+        'forecast.override.create',
+        'forecast.assumption_set.manage',
+        'forecast.purchase_order.simulate',
+        'forecast.experiment.run',
+        'forecast.experiment.compare',
+        'forecast.plan.promote',
+        'forecast.subscriber_payload.read',
         'review.evidence_bundle.create',
         'events.append',
         'projection.checkpoint.upsert',
@@ -234,9 +242,18 @@ export class CatalogCore {
         digital_products: '/v1/digital-products',
         inventory: '/v1/inventory/positions',
         forecast_runs: '/v1/forecasts/runs',
+        forecast_dashboard: '/v1/forecasts/dashboard',
         forecast_scenarios: '/v1/forecasts/scenarios',
         forecast_actuals: '/v1/forecasts/actuals',
         forecast_quality: '/v1/forecasts/quality',
+        forecast_assumption_sets: '/v1/forecasts/assumption-sets',
+        forecast_purchase_orders: '/v1/forecasts/purchase-orders',
+        forecast_overrides: '/v1/forecasts/overrides',
+        forecast_experiments: '/v1/forecasts/experiments',
+        forecast_experiment_run: '/v1/forecasts/experiments/run',
+        forecast_experiment_compare: '/v1/forecasts/experiments/compare',
+        forecast_plan_of_record: '/v1/forecasts/plan-of-record',
+        forecast_subscriber_payload: '/v1/forecasts/subscriber-payload',
         mdm_duplicates: '/v1/mdm/duplicates',
         mdm_detect_duplicates: '/v1/mdm/detect-duplicates',
         mdm_merge: '/v1/mdm/merge',
@@ -338,6 +355,10 @@ export class CatalogCore {
         merge_events: summary.merge_events,
         forecast_actuals: summary.forecast_actuals,
         forecast_quality_events: summary.forecast_quality_events,
+        forecast_assumption_sets: summary.forecast_assumption_sets,
+        forecast_overrides: summary.forecast_overrides,
+        forecast_purchase_orders: summary.forecast_purchase_orders,
+        forecast_plan_records: summary.forecast_plan_records,
         digital_products: summary.digital_products,
         connector_contracts: summary.connector_contracts,
         performance_reports: summary.performance_reports,
@@ -1095,20 +1116,27 @@ export class CatalogCore {
     };
   }
 
-  runForecast({ sku, location = 'main-bin', channel = 'default', horizon_days = 30, scenario = {}, actor = 'local_operator', dryRun = false }) {
+  runForecast({ sku, location = 'main-bin', channel = 'default', horizon_days = 30, scenario = {}, assumptions = null, assumption_set_id = '', assumptionSetId = '', generated_by = 'hapa-catalog-node', generatedBy = '', process_key = 'forecast.cycle', processKey = '', app_id = NODE_ID, appId = '', actor = 'local_operator', methodology = {}, granularity = 'sku', scope = {}, dryRun = false }) {
     const skuRow = this.store.getSkuBySku(sku);
     if (!skuRow) {
       return { ok: false, error_code: 'sku_not_found', message: `No SKU found for ${sku}` };
     }
+    const resolvedAssumptionSetId = assumption_set_id || assumptionSetId || '';
+    const assumptionSet = resolvedAssumptionSetId ? this.store.getForecastAssumptionSet(resolvedAssumptionSetId) : null;
+    const mergedScenario = {
+      ...(assumptionSet?.assumptions || {}),
+      ...(assumptions || {}),
+      ...(scenario || {})
+    };
     const positions = this.store.listInventory({ sku: skuRow.sku });
     const selectedPosition = positions.find(position => position.location === location) || positions[0] || null;
     const sales30 = Number(skuRow.sales_30d || 0);
     const baseline = sales30 > 0 ? sales30 : Math.max(1, Number(selectedPosition?.on_hand || 0) * 0.25);
-    const promotionUplift = Number(scenario.promotion_uplift || 0);
-    const seasonalityFactor = Number(scenario.seasonality_factor || scenario.seasonality || 1);
+    const promotionUplift = Number(mergedScenario.promotion_uplift || 0);
+    const seasonalityFactor = Number(mergedScenario.seasonality_factor || mergedScenario.seasonality || 1);
     const stockoutPenalty = selectedPosition && selectedPosition.available <= 0 ? -0.35 : 0;
     const leadTimeRisk = Number(skuRow.lead_time_days || 0) > 14 ? -0.08 : 0;
-    const adjustment = seasonalityFactor + promotionUplift + stockoutPenalty + leadTimeRisk + Number(scenario.manual_adjustment || 0);
+    const adjustment = seasonalityFactor + promotionUplift + stockoutPenalty + leadTimeRisk + Number(mergedScenario.manual_adjustment || 0);
     const adjusted = Math.max(0, baseline * adjustment * (Number(horizon_days) / 30));
     const confidence = Math.max(0.45, Math.min(0.92, 0.62 + (sales30 > 0 ? 0.16 : 0) + (selectedPosition ? 0.1 : 0) - Math.abs(promotionUplift) * 0.1 - Math.abs(seasonalityFactor - 1) * 0.04));
     const start = new Date();
@@ -1120,8 +1148,30 @@ export class CatalogCore {
       { driver: 'seasonality_factor', value: seasonalityFactor, impact: seasonalityFactor !== 1 ? 'seasonal adjustment' : 'neutral' },
       { driver: 'promotion_uplift', value: promotionUplift, impact: promotionUplift ? 'scenario uplift' : 'none' }
     ];
+    const lineage = {
+      created_at: nowIso(),
+      source_data_refs: [
+        { type: 'sku', id: skuRow.id, sku: skuRow.sku },
+        ...(selectedPosition ? [{ type: 'inventory_position', id: selectedPosition.id, facility: selectedPosition.facility, location: selectedPosition.location }] : []),
+        ...(assumptionSet ? [{ type: 'forecast_assumption_set', id: assumptionSet.id, version: assumptionSet.version }] : [])
+      ],
+      generated_by: generatedBy || generated_by,
+      process_key: processKey || process_key,
+      app_id: appId || app_id,
+      actor_identity: actor,
+      assumption_set_id: assumptionSet?.id || null,
+      granularity,
+      scope,
+      methodology: {
+        key: methodology.key || methodology.method || 'hapa-deterministic-baseline-v2',
+        family: methodology.family || 'deterministic',
+        version: methodology.version || '2.0',
+        training_window: methodology.training_window || '30 days',
+        horizon_days: Number(horizon_days)
+      }
+    };
     const explanation = {
-      model: 'hapa-deterministic-baseline-v2',
+      model: lineage.methodology.key,
       input_window: '30 days',
       confidence,
       assumptions: {
@@ -1129,8 +1179,10 @@ export class CatalogCore {
         demand_is_linear_over_horizon: true,
         seasonality_factor: seasonalityFactor,
         promotion_uplift: promotionUplift,
-        scenario
+        scenario: mergedScenario,
+        assumption_set_id: assumptionSet?.id || null
       },
+      lineage,
       top_drivers: drivers,
       risk_flags: [
         ...(selectedPosition && selectedPosition.available < selectedPosition.safety_stock ? ['below_safety_stock'] : []),
@@ -1145,7 +1197,12 @@ export class CatalogCore {
       adjusted: round(adjusted),
       confidence_low: round(adjusted * (1 - (1 - confidence))),
       confidence_high: round(adjusted * (1 + (1 - confidence))),
-      drivers
+      drivers,
+      lineage: {
+        ...lineage,
+        bucket_created_at: nowIso(),
+        bucket_source_data_refs: lineage.source_data_refs
+      }
     }];
     if (dryRun) {
       return {
@@ -1458,6 +1515,476 @@ export class CatalogCore {
       payload: { winner: winner.key, models: scored.map(model => model.key) }
     });
     return { ok: true, comparison };
+  }
+
+  forecastHierarchyContract() {
+    return {
+      ok: true,
+      version: 'forecast-hierarchy-v1',
+      default_level: 'sku',
+      levels: [
+        { key: 'portfolio', label: 'Portfolio', parent: null, child: 'brand', scope_key: '*' },
+        { key: 'category', label: 'Category', parent: 'portfolio', child: 'brand' },
+        { key: 'brand', label: 'Brand', parent: 'category', child: 'sku' },
+        { key: 'state', label: 'Catalog State', parent: 'portfolio', child: 'sku' },
+        { key: 'location', label: 'Inventory Location', parent: 'sku', child: null },
+        { key: 'channel', label: 'Demand Channel', parent: 'portfolio', child: 'sku' },
+        { key: 'sku', label: 'SKU', parent: 'brand', child: null }
+      ],
+      allocation: {
+        bottom_up: 'Child SKU forecast buckets aggregate to the selected parent scope.',
+        top_down: 'Parent edits allocate back to child SKUs using weighted sales_30d, inventory, and prior forecast share.',
+        reconciliation: 'Most recent active override wins at the edited level; displaced values remain in override history and subscriber diffs.'
+      }
+    };
+  }
+
+  seedForecastExperimentFixtures({ actor = 'fixture-seed' } = {}) {
+    this.seedForecastAssumptionSets({ actor });
+    const items = this.store.listItems({ limit: 10000 });
+    this.seedForecastPurchaseOrders(items);
+    return {
+      ok: true,
+      assumption_sets: this.store.listForecastAssumptionSets({ limit: 100 }),
+      purchase_orders: this.store.listForecastPurchaseOrders({ limit: 500 })
+    };
+  }
+
+  seedForecastAssumptionSets({ actor = 'fixture-seed' } = {}) {
+    for (const set of defaultForecastAssumptionSets(actor)) {
+      this.store.upsertForecastAssumptionSet(set);
+    }
+  }
+
+  seedForecastPurchaseOrders(items = []) {
+    const existing = this.store.listForecastPurchaseOrders({ limit: 1 });
+    if (existing.length || items.length === 0) return;
+    const anchor = new Date('2026-06-07T00:00:00.000Z');
+    items.slice(0, 60).forEach((item, index) => {
+      const due = addDays(anchor, 5 + (index % 10) * 4);
+      const units = Math.max(8, Math.round(Number(item.sales_30d || 0) * (0.9 + (index % 4) * 0.25) + Number(item.reorder_point || 0)));
+      this.store.upsertForecastPurchaseOrder({
+        id: `fpo-${slug(item.sku)}`,
+        sku_id: item.sku_id,
+        supplier_id: item.supplier_id || null,
+        units,
+        unit_cost: Number(item.cost || 0),
+        status: index % 9 === 0 ? 'delayed' : 'open',
+        order_date: addDays(anchor, -3 - (index % 5)).toISOString(),
+        expected_delivery_date: due.toISOString(),
+        receiving_bucket: due.toISOString().slice(0, 10),
+        metadata: {
+          generated: true,
+          source: 'forecast_dashboard_demo',
+          lead_time_days: item.lead_time_days,
+          scenario: index % 9 === 0 ? 'late_supplier' : 'normal_replenishment'
+        }
+      });
+    });
+  }
+
+  forecastAssumptionSets(options = {}) {
+    this.seedForecastAssumptionSets({ actor: options.actor || 'api_client' });
+    return {
+      ok: true,
+      assumption_sets: this.store.listForecastAssumptionSets(options)
+    };
+  }
+
+  saveForecastAssumptionSet(input = {}) {
+    const assumptions = input.assumptions || {};
+    const set = this.store.upsertForecastAssumptionSet({
+      id: input.id || '',
+      name: input.name || 'Operator assumption set',
+      version: input.version || 'assumption-set-v1',
+      scope_level: input.scope_level || input.scopeLevel || 'portfolio',
+      scope_key: input.scope_key || input.scopeKey || '*',
+      assumptions,
+      created_by: input.actor || 'api_client'
+    });
+    this.store.audit({
+      actor: input.actor || 'api_client',
+      action: 'forecast.assumption_set.upsert',
+      objectType: 'forecast_assumption_set',
+      objectId: set.id,
+      summary: `Saved forecast assumption set ${set.name}.`,
+      payload: { scope_level: set.scope_level, scope_key: set.scope_key, assumptions }
+    });
+    return { ok: true, assumption_set: set };
+  }
+
+  forecastPurchaseOrders(options = {}) {
+    if (options.seed !== false) this.seedForecastPurchaseOrders(this.store.listItems({ limit: 10000 }));
+    return {
+      ok: true,
+      purchase_orders: this.store.listForecastPurchaseOrders(options)
+    };
+  }
+
+  saveForecastPurchaseOrder(input = {}) {
+    const skuRow = this.store.getSkuBySku(input.sku || input.sku_id || input.skuId || '');
+    if (!skuRow) return { ok: false, error_code: 'sku_not_found', message: 'SKU is required for purchase order simulation.' };
+    const expected = input.expected_delivery_date || input.expectedDeliveryDate || addDays(new Date(), 14).toISOString();
+    const order = this.store.upsertForecastPurchaseOrder({
+      id: input.id || '',
+      sku_id: skuRow.id,
+      supplier_id: input.supplier_id || input.supplierId || skuRow.supplier_id || null,
+      units: Number(input.units || 0),
+      unit_cost: Number(input.unit_cost || input.unitCost || skuRow.cost || 0),
+      status: input.status || 'open',
+      order_date: input.order_date || input.orderDate || nowIso(),
+      expected_delivery_date: expected,
+      receiving_bucket: input.receiving_bucket || input.receivingBucket || String(expected).slice(0, 10),
+      metadata: input.metadata || { source: 'operator_simulated_purchase_order' }
+    });
+    this.store.audit({
+      actor: input.actor || 'api_client',
+      action: 'forecast.purchase_order.upsert',
+      objectType: 'forecast_purchase_order',
+      objectId: order.id,
+      summary: `Saved simulated purchase order for ${skuRow.sku}.`,
+      payload: { sku: skuRow.sku, units: order.units, expected_delivery_date: order.expected_delivery_date }
+    });
+    return { ok: true, purchase_order: order };
+  }
+
+  forecastDashboard(input = {}) {
+    const increment = normalizeForecastIncrement(input.increment || input.time_increment || input.timeIncrement || 'weeks');
+    const granularity = normalizeForecastGranularity(input.granularity || input.level || 'sku');
+    const buckets = buildForecastBuckets({
+      increment,
+      count: Number(input.bucket_count || input.bucketCount || 12),
+      actualCount: Number(input.actual_count || input.actualCount || 6),
+      anchorDate: input.anchor_date || input.anchorDate || '2026-06-07T00:00:00.000Z'
+    });
+    const items = this.store.listItems({ limit: 10000 });
+    this.seedForecastExperimentFixtures({ actor: input.actor || 'dashboard' });
+    const filtered = items.filter(item => matchesForecastDashboardFilters(item, input));
+    const inventory = this.store.listInventory({ limit: 10000 });
+    const purchaseOrders = this.store.listForecastPurchaseOrders({ limit: 10000 });
+    const overrides = this.store.listForecastOverrides({ status: input.include_reverted ? '' : 'active', limit: 10000 });
+    const assumptionSets = this.store.listForecastAssumptionSets({ limit: 100 });
+    const selectedAssumption = assumptionSets.find(set => set.id === (input.assumption_set_id || input.assumptionSetId)) || assumptionSets[0] || null;
+    const grouped = groupForecastDashboardItems(filtered, inventory, granularity, input.channel || 'default');
+    const rows = grouped.map(group => buildForecastDashboardRow({
+      group,
+      buckets,
+      increment,
+      assumptionSet: selectedAssumption,
+      purchaseOrders,
+      overrides,
+      granularity
+    })).filter(row => matchesSupplyFilters(row, input));
+    const sortedRows = sortForecastDashboardRows(rows, input);
+    const graph = buildForecastDashboardGraph(sortedRows, buckets);
+    const metadata = forecastDashboardMetadata(items, inventory);
+    const table = {
+      increment,
+      granularity,
+      buckets,
+      actual_metrics: ['units_sold', 'revenue_sold', 'total_cost'],
+      forecast_metrics: ['projected_units', 'projected_revenue', 'cost_of_goods_sold', 'projected_inventory_on_hand', 'supply_on_order_units', `${increment}_of_supply`],
+      rows: sortedRows
+    };
+    const subscriber_payload = {
+      contract: 'forecast-dashboard-subscriber-v1',
+      generated_at: nowIso(),
+      filters: normalizeForecastDashboardFilterState(input, increment, granularity),
+      lineage: {
+        source_data_refs: [
+          { type: 'items', count: filtered.length },
+          { type: 'inventory_positions', count: inventory.length },
+          { type: 'forecast_purchase_orders', count: purchaseOrders.length },
+          { type: 'forecast_overrides', count: overrides.length },
+          ...(selectedAssumption ? [{ type: 'forecast_assumption_set', id: selectedAssumption.id }] : [])
+        ],
+        generated_by: input.generated_by || 'forecast_dashboard',
+        process_key: input.process_key || 'forecast.cycle',
+        app_id: NODE_ID
+      },
+      rows: sortedRows.map(row => ({
+        key: row.key,
+        label: row.label,
+        level: row.level,
+        risk_state: row.risk_state,
+        buckets: row.buckets.map(bucket => ({
+          bucket_start: bucket.bucket_start,
+          bucket_end: bucket.bucket_end,
+          kind: bucket.kind,
+          raw: bucket.raw,
+          effective: bucket.effective,
+          overrides: bucket.overrides,
+          supply: bucket.supply
+        }))
+      }))
+    };
+    return {
+      ok: true,
+      contract: 'forecast-dashboard-v1',
+      filters: metadata,
+      filter_state: normalizeForecastDashboardFilterState(input, increment, granularity),
+      hierarchy: this.forecastHierarchyContract().levels,
+      assumption_set: selectedAssumption,
+      table,
+      graph,
+      overrides,
+      purchase_orders: purchaseOrders,
+      subscriber_payload
+    };
+  }
+
+  createForecastOverride(input = {}) {
+    const reason = input.reason_code || input.reasonCode || '';
+    const rationale = input.rationale || input.reason || input.notes || '';
+    if (!reason || !rationale) {
+      return { ok: false, error_code: 'override_reason_required', message: 'reason_code and rationale are required for forecast overrides.' };
+    }
+    const sku = input.sku || input.scope_key || input.scopeKey || '';
+    const skuRow = sku ? this.store.getSkuBySku(sku) : null;
+    const field = input.field || 'projected_units';
+    const scopeLevel = input.scope_level || input.scopeLevel || (skuRow ? 'sku' : 'portfolio');
+    const scopeKey = input.scope_key || input.scopeKey || skuRow?.sku || '*';
+    let originalValue = Number(input.original_value ?? input.originalValue ?? 0);
+    const bucketStart = input.bucket_start || input.bucketStart || '';
+    const bucketEnd = input.bucket_end || input.bucketEnd || bucketStart;
+    if (!input.original_value && !input.originalValue && bucketStart) {
+      const dashboard = this.forecastDashboard({
+        sku: skuRow?.sku || '',
+        granularity: scopeLevel === 'portfolio' ? 'portfolio' : scopeLevel,
+        increment: input.increment || 'weeks'
+      });
+      const row = dashboard.table.rows.find(item => item.key === scopeKey || item.skus?.includes(scopeKey)) || dashboard.table.rows[0];
+      const bucket = row?.buckets.find(item => item.bucket_start === bucketStart) || row?.buckets.find(item => item.kind === 'forecast');
+      originalValue = Number(bucket?.effective?.[field] ?? bucket?.raw?.[field] ?? 0);
+    }
+    const override = this.store.createForecastOverride({
+      run_id: input.run_id || input.runId || null,
+      sku_id: skuRow?.id || null,
+      scope_level: scopeLevel,
+      scope_key: scopeKey,
+      bucket_start: bucketStart || nowIso(),
+      bucket_end: bucketEnd || bucketStart || nowIso(),
+      field,
+      original_value: originalValue,
+      override_value: Number(input.override_value ?? input.overrideValue ?? input.value ?? 0),
+      effective_value: Number(input.effective_value ?? input.effectiveValue ?? input.override_value ?? input.overrideValue ?? input.value ?? 0),
+      reason_code: reason,
+      rationale,
+      actor: input.actor || 'api_client',
+      source_context: input.source_context || input.sourceContext || {
+        generated_by: input.generated_by || 'operator_override',
+        process_key: input.process_key || 'forecast.cycle',
+        app_id: input.app_id || NODE_ID,
+        card_context: input.card_context || null
+      }
+    });
+    this.store.audit({
+      actor: input.actor || 'api_client',
+      action: 'forecast.override.create',
+      objectType: 'forecast_override',
+      objectId: override.id,
+      summary: `Overrode ${field} at ${scopeLevel}:${scopeKey}.`,
+      payload: { field, original_value: originalValue, override_value: override.override_value, reason_code: reason }
+    });
+    return { ok: true, override };
+  }
+
+  revertForecastOverride(input = {}) {
+    const override = this.store.revertForecastOverride({ id: input.id || input.override_id || input.overrideId, actor: input.actor || 'api_client' });
+    if (!override) return { ok: false, error_code: 'override_not_found', message: 'Forecast override not found.' };
+    this.store.audit({
+      actor: input.actor || 'api_client',
+      action: 'forecast.override.revert',
+      objectType: 'forecast_override',
+      objectId: override.id,
+      summary: `Reverted forecast override ${override.id}.`,
+      payload: { field: override.field, scope_level: override.scope_level, scope_key: override.scope_key }
+    });
+    return { ok: true, override };
+  }
+
+  runForecastExperiment(input = {}) {
+    this.seedForecastExperimentFixtures({ actor: input.actor || 'api_client' });
+    const sku = input.sku || this.store.listItems({ limit: 1 })[0]?.sku || '';
+    if (!sku) return { ok: false, error_code: 'sku_required', message: 'A SKU or seeded catalog is required for forecast experiments.' };
+    const assumptionSetIds = input.assumption_set_ids || input.assumptionSetIds || ['assume-base-case', 'assume-promo-lift', 'assume-downside-supply'];
+    const methods = input.methods || ['baseline', 'seasonal', 'promotion-adjusted', 'agent-assisted'];
+    const runs = [];
+    for (const method of methods) {
+      const methodConfig = forecastMethodConfig(method);
+      const assumptionSetId = methodConfig.assumption_set_id || assumptionSetIds[Math.min(runs.length, assumptionSetIds.length - 1)] || '';
+      const run = this.runForecast({
+        sku,
+        location: input.location || 'main-bin',
+        channel: input.channel || 'default',
+        horizon_days: Number(input.horizon_days || input.horizonDays || 90),
+        assumption_set_id: assumptionSetId,
+        scenario: methodConfig.scenario,
+        methodology: methodConfig.methodology,
+        granularity: input.granularity || 'sku',
+        scope: { level: input.scope_level || 'sku', key: input.scope_key || sku },
+        generated_by: input.generated_by || 'forecast_experiment_runner',
+        process_key: input.process_key || 'forecast.cycle',
+        app_id: input.app_id || NODE_ID,
+        actor: input.actor || 'api_client'
+      });
+      if (run.ok) runs.push(run.run);
+    }
+    const comparison = this.compareForecastRuns({
+      run_ids: runs.map(run => run.id),
+      actor: input.actor || 'api_client',
+      scope_level: input.scope_level || 'sku',
+      scope_key: input.scope_key || sku
+    });
+    const branches = buildScenarioBranches(runs);
+    this.store.audit({
+      actor: input.actor || 'api_client',
+      action: 'forecast.experiment.run',
+      objectType: 'forecast_run',
+      summary: `Ran ${runs.length} forecast experiment runs for ${sku}.`,
+      payload: { sku, methods, run_ids: runs.map(run => run.id), comparison_id: comparison.comparison?.id || null }
+    });
+    return { ok: true, runs, comparison: comparison.comparison || null, branches };
+  }
+
+  compareForecastRuns(input = {}) {
+    const runIds = input.run_ids || input.runIds || [];
+    let runs = runIds.map(id => this.store.getForecastRun(id)).filter(Boolean);
+    if (!runs.length && input.sku) runs = this.store.listForecastRuns().filter(run => run.sku === input.sku).slice(0, 4).map(run => this.store.getForecastRun(run.id)).filter(Boolean);
+    if (runs.length < 2) return { ok: false, error_code: 'not_enough_runs', message: 'At least two forecast runs are required for comparison.' };
+    const baseline = runs[0];
+    const rows = runs.map(run => {
+      const value = Number(run.series?.[0]?.adjusted || 0);
+      const baseValue = Number(baseline.series?.[0]?.adjusted || 0);
+      const delta = value - baseValue;
+      return {
+        run_id: run.id,
+        sku: run.sku,
+        method: run.explanation?.lineage?.methodology?.key || run.explanation?.model || 'unknown',
+        family: run.explanation?.lineage?.methodology?.family || 'deterministic',
+        granularity: run.explanation?.lineage?.granularity || 'sku',
+        assumption_set_id: run.explanation?.lineage?.assumption_set_id || null,
+        projected_units: round(value),
+        projected_revenue: round(value * Number(this.store.getSkuBySku(run.sku)?.price || 0)),
+        confidence: run.explanation?.confidence || 0,
+        delta_units: round(delta),
+        delta_percent: baseValue === 0 ? 0 : round((delta / baseValue) * 100),
+        risk_flags: run.explanation?.risk_flags || []
+      };
+    });
+    const winner = rows.slice().sort((left, right) => Math.abs(left.delta_percent) - Math.abs(right.delta_percent))[0];
+    const comparison = this.store.createForecastModelComparison({
+      sku_id: this.store.getSkuBySku(baseline.sku).id,
+      location: baseline.location,
+      channel: baseline.channel,
+      baseline_run_id: baseline.id,
+      models: rows,
+      winner,
+      metrics: {
+        comparison_type: 'multi_run_methodology',
+        run_count: runs.length,
+        bucket_alignment: 'first_bucket',
+        diffs: rows.map(row => ({ run_id: row.run_id, delta_units: row.delta_units, delta_percent: row.delta_percent }))
+      }
+    });
+    return {
+      ok: true,
+      comparison,
+      rows,
+      diffs: rows.map(row => ({
+        run_id: row.run_id,
+        method: row.method,
+        changed_assumptions: row.assumption_set_id,
+        metric_effects: {
+          projected_units: row.projected_units,
+          delta_units: row.delta_units,
+          delta_percent: row.delta_percent
+        }
+      }))
+    };
+  }
+
+  promoteForecastPlan(input = {}) {
+    const run = this.store.getForecastRun(input.run_id || input.runId || '');
+    if (!run) return { ok: false, error_code: 'forecast_run_not_found', message: 'run_id is required to promote a forecast plan.' };
+    const subscriberPayload = this.forecastSubscriberPayload({
+      sku: run.sku,
+      granularity: input.scope_level || input.scopeLevel || 'sku',
+      actor: input.actor || 'api_client'
+    }).payload;
+    const plan = this.store.createForecastPlanRecord({
+      run_id: run.id,
+      comparison_id: input.comparison_id || input.comparisonId || null,
+      scope_level: input.scope_level || input.scopeLevel || 'sku',
+      scope_key: input.scope_key || input.scopeKey || run.sku,
+      horizon_days: Number(input.horizon_days || input.horizonDays || run.horizon_days || 30),
+      status: input.status || 'active',
+      approver: input.approver || input.actor || 'api_client',
+      rationale: input.rationale || input.reason || 'Promoted from forecast experimentation comparison.',
+      superseded_run_id: input.superseded_run_id || input.supersededRunId || null,
+      subscriber_payload: subscriberPayload
+    });
+    const decision = this.runHapaDecision({
+      process_key: 'forecast.cycle',
+      subject_type: 'forecast_run',
+      subject_id: run.id,
+      target_domain: 'forecasting',
+      actor: input.actor || 'api_client',
+      input_context: {
+        plan_record_id: plan.id,
+        rationale: plan.rationale
+      }
+    });
+    this.store.audit({
+      actor: input.actor || 'api_client',
+      action: 'forecast.plan.promote',
+      objectType: 'forecast_plan_record',
+      objectId: plan.id,
+      summary: `Promoted forecast run ${run.id} as plan of record.`,
+      payload: { run_id: run.id, scope_level: plan.scope_level, scope_key: plan.scope_key, decision_run_id: decision.run?.id || null }
+    });
+    return { ok: true, plan_record: plan, decision };
+  }
+
+  forecastSubscriberPayload(input = {}) {
+    const dashboard = this.forecastDashboard(input);
+    const plans = this.store.listForecastPlanRecords({ limit: 20 });
+    return {
+      ok: true,
+      payload: {
+        contract: 'forecast-effective-supply-subscriber-v1',
+        generated_at: nowIso(),
+        dashboard: dashboard.subscriber_payload,
+        plan_records: plans,
+        assumption_sets: this.store.listForecastAssumptionSets({ limit: 100 }),
+        purchase_orders: this.store.listForecastPurchaseOrders({ limit: 500 }),
+        overrides: this.store.listForecastOverrides({ limit: 500 })
+      }
+    };
+  }
+
+  forecastExperimentation(input = {}) {
+    this.seedForecastExperimentFixtures({ actor: input.actor || 'api_client' });
+    const dashboard = this.forecastDashboard(input);
+    let runs = this.store.listForecastRuns().slice(0, 4).map(run => this.store.getForecastRun(run.id)).filter(Boolean);
+    let experiment = null;
+    if (runs.length < 2 && dashboard.table.rows[0]?.skus?.[0]) {
+      experiment = this.runForecastExperiment({ sku: dashboard.table.rows[0].skus[0], actor: input.actor || 'api_client' });
+      runs = experiment.runs || runs;
+    }
+    const comparison = runs.length >= 2 ? this.compareForecastRuns({ run_ids: runs.map(run => run.id), actor: input.actor || 'api_client' }) : null;
+    return {
+      ok: true,
+      hierarchy: this.forecastHierarchyContract(),
+      dashboard,
+      assumption_sets: this.store.listForecastAssumptionSets({ limit: 100 }),
+      purchase_orders: this.store.listForecastPurchaseOrders({ limit: 500 }),
+      runs,
+      comparison: comparison?.comparison || experiment?.comparison || null,
+      diffs: comparison?.diffs || [],
+      plan_records: this.store.listForecastPlanRecords({ limit: 20 }),
+      subscriber_payload: this.forecastSubscriberPayload(input).payload
+    };
   }
 
   marketProviderRuns(options = {}) {
@@ -1993,6 +2520,10 @@ export class CatalogCore {
       connector_runs: this.store.listConnectorRuns({ limit: 20 }),
       identity_sessions: this.store.listIdentitySessions({ limit: 20 }),
       forecast_comparisons: this.store.listForecastModelComparisons({ limit: 20 }),
+      forecast_assumption_sets: this.store.listForecastAssumptionSets({ limit: 20 }),
+      forecast_overrides: this.store.listForecastOverrides({ limit: 20 }),
+      forecast_purchase_orders: this.store.listForecastPurchaseOrders({ limit: 20 }),
+      forecast_plan_records: this.store.listForecastPlanRecords({ limit: 20 }),
       market_provider_runs: this.store.listMarketProviderRuns({ limit: 20 }),
       projection_exports: this.store.listProjectionExports({ limit: 20 }),
       pricing_scenarios: this.store.listPricingScenarios({ limit: 20 }),
@@ -6174,6 +6705,16 @@ export class CatalogCore {
       { command: 'item get <id-or-sku>', surface_keys: ['item_detail'], test: 'test/catalog-core.test.mjs' },
       { command: 'inventory position --sku <sku>', surface_keys: ['inventory_positions'], test: 'test/api-smoke.test.mjs' },
       { command: 'forecast run --sku <sku>', surface_keys: ['forecast_runs'], test: 'test/api-smoke.test.mjs' },
+      { command: 'forecast dashboard --increment weeks --granularity category', surface_keys: ['forecast_dashboard'], test: 'test/catalog-core.test.mjs' },
+      { command: 'forecast assumptions', surface_keys: ['forecast_assumption_sets'], test: 'test/catalog-core.test.mjs' },
+      { command: 'forecast assumption-save --file <json>', surface_keys: ['forecast_assumption_sets'], test: 'test/api-smoke.test.mjs' },
+      { command: 'forecast purchase-orders', surface_keys: ['forecast_purchase_orders'], test: 'test/catalog-core.test.mjs' },
+      { command: 'forecast purchase-order --file <json>', surface_keys: ['forecast_purchase_orders'], test: 'test/api-smoke.test.mjs' },
+      { command: 'forecast override --sku <sku> --bucket-start <date> --metric projected_units --value <n> --reason-code <code> --rationale <text>', surface_keys: ['forecast_overrides', 'forecast_dashboard'], test: 'test/api-smoke.test.mjs' },
+      { command: 'forecast experiment --sku <sku> --methods baseline seasonal promotion', surface_keys: ['forecast_experiments'], test: 'test/catalog-core.test.mjs' },
+      { command: 'forecast compare-runs --run-ids <ids>', surface_keys: ['forecast_experiment_compare'], test: 'test/catalog-core.test.mjs' },
+      { command: 'forecast plan promote --run-id <id>', surface_keys: ['forecast_plan_of_record'], test: 'test/catalog-core.test.mjs' },
+      { command: 'forecast subscriber-payload', surface_keys: ['forecast_subscriber_payload'], test: 'test/catalog-core.test.mjs' },
       { command: 'roles list', surface_keys: ['roles'], test: 'test/catalog-core.test.mjs' },
       { command: 'audit search', surface_keys: ['audit_events'], test: 'test/api-smoke.test.mjs' },
       { command: 'market retrieve --upc <upc>', surface_keys: ['market_retrieve'], test: 'test/api-smoke.test.mjs' },
@@ -6197,6 +6738,7 @@ export class CatalogCore {
       { control: 'Items view and search', surface_keys: ['items', 'item_detail'], test: 'scripts/web-e2e-smoke.mjs' },
       { control: 'Inventory view', surface_keys: ['inventory_positions'], test: 'scripts/web-e2e-smoke.mjs' },
       { control: 'Forecast action and view', surface_keys: ['forecast_runs'], test: 'scripts/web-e2e-smoke.mjs' },
+      { control: 'Forecast dashboard filters, graph, hybrid table, overrides, and experiments', surface_keys: ['forecast_dashboard', 'forecast_assumption_sets', 'forecast_purchase_orders', 'forecast_overrides', 'forecast_experiments', 'forecast_subscriber_payload'], test: 'scripts/web-e2e-smoke.mjs' },
       { control: 'Market lookup panel', surface_keys: ['market_retrieve', 'amazon_listing_retrieve', 'market_prices', 'market_listing'], test: 'scripts/web-e2e-smoke.mjs' },
       { control: 'Workbench view', surface_keys: ['import_mappings', 'import_mapping_preview', 'connector_contracts', 'performance_reports'], test: 'scripts/web-e2e-smoke.mjs' },
       { control: 'Quality view', surface_keys: ['quality_rules', 'quality_work_orders', 'forecast_quality'], test: 'scripts/web-e2e-smoke.mjs' },
@@ -6260,12 +6802,12 @@ export class CatalogCore {
         { id: 'API', path: 'docs/API.md', title: 'API', covers: Object.keys(this.capabilities().endpoints) },
         { id: 'HAPA_CARD_PLACEMENT', path: 'docs/HAPA_CARD_PLACEMENT.md', title: 'Hapa Card Placement', covers: ['hapa_cards', 'hapa_card_placements', 'hapa_processes', 'hapa_decision_run'] },
         { id: 'CONNECTORS', path: 'docs/CONNECTORS.md', title: 'Connector Contracts', covers: ['connector_contracts', 'connector_runs', 'market_retrieve', 'amazon_listing_retrieve'] },
-        { id: 'FEATURE_PARITY', path: 'docs/FEATURE_PARITY.md', title: 'Feature Parity', covers: ['health', 'capabilities', 'items', 'ops', 'kanban_board', 'demo_catalog_fixture', 'demo_catalog_import'] },
+        { id: 'FEATURE_PARITY', path: 'docs/FEATURE_PARITY.md', title: 'Feature Parity', covers: ['health', 'capabilities', 'items', 'ops', 'kanban_board', 'demo_catalog_fixture', 'demo_catalog_import', 'forecast_dashboard', 'forecast_experiments'] },
         { id: 'PERFORMANCE', path: 'docs/PERFORMANCE.md', title: 'Performance Targets', covers: ['performance_reports'] },
-        { id: 'OPERATOR_GUIDE', path: 'docs/OPERATOR_GUIDE.md', title: 'Web And Desktop Operator Guide', covers: ['summary', 'items', 'kanban_board', 'ops', 'hapa_cards', 'demo_catalog_import'] },
+        { id: 'OPERATOR_GUIDE', path: 'docs/OPERATOR_GUIDE.md', title: 'Web And Desktop Operator Guide', covers: ['summary', 'items', 'forecast_dashboard', 'kanban_board', 'ops', 'hapa_cards', 'demo_catalog_import'] },
         { id: 'SCREENSHOT_CHECKLIST', path: 'docs/SCREENSHOT_CHECKLIST.md', title: 'Review Screenshot Checklist', covers: ['items', 'kanban_board', 'ops', 'hapa_cards', 'market_listing'] },
         { id: 'RELEASE_HANDOFF', path: 'docs/RELEASE_HANDOFF.md', title: 'Release Handoff Notes', covers: ['next_cycle_run', 'next_cycle_artifacts', 'next_cycle_test_runs', 'demo_catalog_import'] },
-        { id: 'GITHUB_PAGES_DEMO', path: 'docs/GITHUB_PAGES_DEMO.md', title: 'GitHub Pages Demo', covers: ['summary', 'items', 'kanban_board', 'hapa_cards', 'forecast_runs', 'ops', 'docs'] },
+        { id: 'GITHUB_PAGES_DEMO', path: 'docs/GITHUB_PAGES_DEMO.md', title: 'GitHub Pages Demo', covers: ['summary', 'items', 'kanban_board', 'hapa_cards', 'forecast_runs', 'forecast_dashboard', 'forecast_experiments', 'ops', 'docs'] },
         { id: 'TRACEABILITY', path: 'docs/REQUIREMENTS_TRACEABILITY.md', title: 'Requirements Traceability', covers: ['next_cycle_artifacts', 'next_cycle_test_runs', 'kanban_board'] },
         { id: 'NEXT_WORK_CYCLE', path: 'docs/NEXT_WORK_CYCLE.md', title: 'Next Work Cycle', covers: ['next_cycle_run', 'kanban_board'] }
       ]
@@ -6506,6 +7048,440 @@ function forecastRemediation(error, stockoutDays) {
   if (error > 0) return 'Increase baseline or add demand driver for under-forecasted item.';
   if (error < 0) return 'Review promotion or seasonality assumptions for over-forecasted item.';
   return 'Forecast matched actual demand; no remediation required.';
+}
+
+function normalizeForecastIncrement(value) {
+  const normalized = String(value || 'weeks').toLowerCase();
+  if (['day', 'days', 'daily'].includes(normalized)) return 'days';
+  if (['week', 'weeks', 'weekly'].includes(normalized)) return 'weeks';
+  if (['month', 'months', 'monthly'].includes(normalized)) return 'months';
+  if (['quarter', 'quarters', 'quarterly'].includes(normalized)) return 'quarters';
+  if (['year', 'years', 'yearly'].includes(normalized)) return 'years';
+  return 'weeks';
+}
+
+function normalizeForecastGranularity(value) {
+  const normalized = String(value || 'sku').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  if (['portfolio', 'category', 'brand', 'state', 'location', 'channel', 'sku'].includes(normalized)) return normalized;
+  return 'sku';
+}
+
+function forecastIncrementDays(increment) {
+  return {
+    days: 1,
+    weeks: 7,
+    months: 30,
+    quarters: 91,
+    years: 365
+  }[increment] || 7;
+}
+
+function addDays(date, days) {
+  return new Date(date.getTime() + Number(days || 0) * 24 * 60 * 60 * 1000);
+}
+
+function buildForecastBuckets({ increment, count = 12, actualCount = 6, anchorDate = '2026-06-07T00:00:00.000Z' }) {
+  const days = forecastIncrementDays(increment);
+  const anchor = new Date(anchorDate);
+  return Array.from({ length: count }, (_, index) => {
+    const start = addDays(anchor, (index - actualCount) * days);
+    const end = addDays(start, days);
+    return {
+      index,
+      label: bucketLabel(start, increment),
+      bucket_start: start.toISOString(),
+      bucket_end: end.toISOString(),
+      kind: index < actualCount ? 'actual' : 'forecast',
+      days
+    };
+  });
+}
+
+function bucketLabel(date, increment) {
+  if (increment === 'years') return String(date.getUTCFullYear());
+  if (increment === 'quarters') return `${date.getUTCFullYear()} Q${Math.floor(date.getUTCMonth() / 3) + 1}`;
+  if (increment === 'months') return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+  return date.toISOString().slice(0, 10);
+}
+
+function matchesForecastDashboardFilters(item, input = {}) {
+  const sku = input.sku || input.SKU || '';
+  const category = input.category || '';
+  const brand = input.brand || '';
+  const state = input.state || input.status || '';
+  return (!sku || item.sku === sku || item.sku_id === sku)
+    && (!category || item.category === category)
+    && (!brand || item.brand === brand)
+    && (!state || item.status === state);
+}
+
+function groupForecastDashboardItems(items, inventory, granularity, channel = 'default') {
+  const bySku = new Map();
+  for (const position of inventory) {
+    const list = bySku.get(position.sku) || [];
+    list.push(position);
+    bySku.set(position.sku, list);
+  }
+  const groups = new Map();
+  const add = (key, label, item, positions) => {
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        label,
+        level: granularity,
+        channel,
+        items: [],
+        positions: []
+      });
+    }
+    const group = groups.get(key);
+    group.items.push(item);
+    group.positions.push(...positions);
+  };
+  for (const item of items) {
+    const positions = bySku.get(item.sku) || [];
+    if (granularity === 'portfolio') add('*', 'Portfolio', item, positions);
+    else if (granularity === 'category') add(item.category || 'uncategorized', item.category || 'Uncategorized', item, positions);
+    else if (granularity === 'brand') add(item.brand || 'unbranded', item.brand || 'Unbranded', item, positions);
+    else if (granularity === 'state') add(item.status || 'unknown', item.status || 'Unknown', item, positions);
+    else if (granularity === 'channel') add(channel, channel, item, positions);
+    else if (granularity === 'location') {
+      if (!positions.length) add('unlocated', 'Unlocated', item, positions);
+      for (const position of positions) add(`${position.facility}/${position.location}`, `${position.facility} / ${position.location}`, item, [position]);
+    } else {
+      add(item.sku, item.sku, item, positions);
+    }
+  }
+  return [...groups.values()].map(group => ({
+    ...group,
+    skus: uniqueStrings(group.items.map(item => item.sku))
+  }));
+}
+
+function buildForecastDashboardRow({ group, buckets, increment, assumptionSet, purchaseOrders, overrides, granularity }) {
+  const factor = forecastAssumptionFactor(assumptionSet?.assumptions || {});
+  const sales30 = group.items.reduce((total, item) => total + Number(item.sales_30d || 0), 0);
+  const fallbackDemand = group.positions.reduce((total, pos) => total + Number(pos.available || 0), 0) / 45;
+  const baseDailyRate = Math.max(0.1, sales30 / 30 || fallbackDemand || group.items.length * 0.45);
+  const price = weightedAverage(group.items, 'price', 'sales_30d');
+  const cost = weightedAverage(group.items, 'cost', 'sales_30d');
+  const openingOnHand = group.positions.reduce((total, pos) => total + Number(pos.on_hand || 0) - Number(pos.reserved || 0), 0);
+  let projectedInventory = openingOnHand;
+  const relevantPurchaseOrders = purchaseOrders.filter(order => group.skus.includes(order.sku));
+  const bucketRows = buckets.map((bucket, index) => {
+    const received = relevantPurchaseOrders
+      .filter(order => dateWithin(order.expected_delivery_date, bucket.bucket_start, bucket.bucket_end))
+      .reduce((total, order) => total + Number(order.units || 0), 0);
+    const futureOnOrder = relevantPurchaseOrders
+      .filter(order => new Date(order.expected_delivery_date) >= new Date(bucket.bucket_start) && ['open', 'delayed'].includes(order.status))
+      .reduce((total, order) => total + Number(order.units || 0), 0);
+    const actualUnits = round(baseDailyRate * bucket.days * (0.88 + (index % 4) * 0.045));
+    const forecastUnits = round(baseDailyRate * bucket.days * factor * (1 + (index - 6) * 0.015));
+    const raw = bucket.kind === 'actual'
+      ? {
+          units_sold: actualUnits,
+          revenue_sold: round(actualUnits * price),
+          total_cost: round(actualUnits * cost)
+        }
+      : {
+          projected_units: Math.max(0, forecastUnits),
+          projected_revenue: round(Math.max(0, forecastUnits) * price),
+          cost_of_goods_sold: round(Math.max(0, forecastUnits) * cost),
+          projected_inventory_on_hand: round(projectedInventory + received - Math.max(0, forecastUnits)),
+          supply_on_order_units: round(futureOnOrder)
+        };
+    const bucketOverrides = bucket.kind === 'forecast' ? matchingForecastOverrides(overrides, {
+      group,
+      granularity,
+      bucket,
+      raw
+    }) : [];
+    const effective = { ...raw };
+    for (const override of bucketOverrides) effective[override.field] = Number(override.effective_value);
+    if (bucket.kind === 'forecast') {
+      projectedInventory = Number(effective.projected_inventory_on_hand ?? (projectedInventory + received - Number(effective.projected_units || 0)));
+      effective.projected_inventory_on_hand = round(projectedInventory);
+    }
+    const demandForSupply = bucket.kind === 'forecast' ? Number(effective.projected_units || 0) : actualUnits;
+    const onHandSupply = demandForSupply <= 0 ? 999 : Math.max(0, projectedInventory) / Math.max(1, demandForSupply);
+    const onOrderSupply = demandForSupply <= 0 ? 999 : futureOnOrder / Math.max(1, demandForSupply);
+    const riskState = supplyRiskState(projectedInventory, futureOnOrder, demandForSupply, onHandSupply);
+    const yoyBase = demandForSupply * (0.84 + (index % 5) * 0.035);
+    return {
+      ...bucket,
+      raw,
+      effective,
+      overrides: bucketOverrides.map(override => ({
+        id: override.id,
+        field: override.field,
+        original_value: override.original_value,
+        override_value: override.override_value,
+        reason_code: override.reason_code,
+        rationale: override.rationale,
+        actor: override.actor,
+        created_at: override.created_at
+      })),
+      purchase_orders_due: relevantPurchaseOrders.filter(order => dateWithin(order.expected_delivery_date, bucket.bucket_start, bucket.bucket_end)).map(order => order.id),
+      yoy: {
+        units_prior_year: round(yoyBase),
+        units_variance: round(demandForSupply - yoyBase),
+        units_variance_percent: yoyBase === 0 ? 0 : round(((demandForSupply - yoyBase) / yoyBase) * 100)
+      },
+      supply: {
+        time_unit: increment,
+        on_hand_units: round(Math.max(0, projectedInventory)),
+        on_hand_time_units: round(onHandSupply),
+        on_order_units: round(futureOnOrder),
+        on_order_time_units: round(onOrderSupply),
+        received_units: round(received),
+        consumed_units: round(demandForSupply),
+        risk_state: riskState
+      }
+    };
+  });
+  return {
+    key: group.key,
+    label: group.label,
+    level: group.level,
+    channel: group.channel,
+    skus: group.skus,
+    sku_count: group.skus.length,
+    opening_on_hand: round(openingOnHand),
+    demand_rate_per_day: round(baseDailyRate),
+    risk_state: worstSupplyRisk(bucketRows.map(bucket => bucket.supply.risk_state)),
+    allocation: {
+      bottom_up_units: round(bucketRows.filter(bucket => bucket.kind === 'forecast').reduce((total, bucket) => total + Number(bucket.effective.projected_units || 0), 0)),
+      top_down_weight: round((sales30 || group.items.length) / Math.max(1, group.items.length)),
+      reconciliation_rule: 'latest_active_override_wins'
+    },
+    buckets: bucketRows
+  };
+}
+
+function forecastAssumptionFactor(assumptions = {}) {
+  return Math.max(0.05,
+    Number(assumptions.seasonality_factor || assumptions.seasonality || 1)
+    + Number(assumptions.promotion_uplift || 0)
+    + Number(assumptions.demand_shock || 0)
+    + Number(assumptions.launch_ramp || 0)
+    - Number(assumptions.cannibalization || 0));
+}
+
+function weightedAverage(items, field, weightField) {
+  const totalWeight = items.reduce((total, item) => total + Math.max(1, Number(item[weightField] || 0)), 0);
+  if (!totalWeight) return 0;
+  return items.reduce((total, item) => total + Number(item[field] || 0) * Math.max(1, Number(item[weightField] || 0)), 0) / totalWeight;
+}
+
+function dateWithin(date, start, end) {
+  const value = new Date(date).getTime();
+  return value >= new Date(start).getTime() && value < new Date(end).getTime();
+}
+
+function matchingForecastOverrides(overrides, { group, granularity, bucket, raw }) {
+  return overrides.filter(override => {
+    if (override.status !== 'active') return false;
+    if (override.bucket_start && override.bucket_start !== bucket.bucket_start) return false;
+    if (!Object.prototype.hasOwnProperty.call(raw, override.field)) return false;
+    if (override.scope_level === 'portfolio' && override.scope_key === '*') return true;
+    if (override.scope_level === granularity && override.scope_key === group.key) return true;
+    if (override.scope_level === 'sku' && group.skus.includes(override.scope_key)) return true;
+    return false;
+  });
+}
+
+function supplyRiskState(onHand, onOrder, demand, supplyUnits) {
+  if (onHand <= 0 && onOrder <= 0) return 'stockout';
+  if (onHand <= 0 && onOrder > 0) return 'on-order-covered';
+  if (supplyUnits < 0.6 || onHand < demand * 0.5) return 'at-risk';
+  if (supplyUnits < 1.25) return 'low-supply';
+  return 'in-stock';
+}
+
+function worstSupplyRisk(states = []) {
+  const rank = ['stockout', 'at-risk', 'low-supply', 'on-order-covered', 'in-stock'];
+  return states.slice().sort((left, right) => rank.indexOf(left) - rank.indexOf(right))[0] || 'in-stock';
+}
+
+function matchesSupplyFilters(row, input = {}) {
+  const forecastBucket = row.buckets.find(bucket => bucket.kind === 'forecast') || row.buckets.at(-1);
+  const supply = forecastBucket?.supply || {};
+  const checks = [];
+  if (input.in_stock != null && input.in_stock !== '') checks.push(Boolean(input.in_stock === true || input.in_stock === 'true') === (supply.on_hand_units > 0));
+  if (input.on_order != null && input.on_order !== '') checks.push(Boolean(input.on_order === true || input.on_order === 'true') === (supply.on_order_units > 0));
+  if (input.supply_quantity_min != null) checks.push(supply.on_hand_units >= Number(input.supply_quantity_min));
+  if (input.supply_quantity_max != null) checks.push(supply.on_hand_units <= Number(input.supply_quantity_max));
+  if (input.supply_time_min != null) checks.push(supply.on_hand_time_units >= Number(input.supply_time_min));
+  if (input.supply_time_max != null) checks.push(supply.on_hand_time_units <= Number(input.supply_time_max));
+  if (!checks.length) return true;
+  return String(input.supply_logic || input.logic || 'and').toLowerCase() === 'or'
+    ? checks.some(Boolean)
+    : checks.every(Boolean);
+}
+
+function sortForecastDashboardRows(rows, input = {}) {
+  const sortBy = input.sort_by || input.sortBy || '';
+  if (!sortBy) return rows;
+  const direction = String(input.sort_direction || input.sortDirection || 'asc').toLowerCase() === 'desc' ? -1 : 1;
+  const valueFor = row => {
+    const bucket = row.buckets.find(item => item.kind === 'forecast') || row.buckets.at(-1);
+    if (sortBy === 'supply_time_units') return bucket?.supply?.on_hand_time_units ?? 0;
+    if (sortBy === 'supply_quantity') return bucket?.supply?.on_hand_units ?? 0;
+    if (sortBy === 'on_order_quantity') return bucket?.supply?.on_order_units ?? 0;
+    if (sortBy === 'projected_units') return bucket?.effective?.projected_units ?? 0;
+    return row.label;
+  };
+  return rows.slice().sort((left, right) => {
+    const a = valueFor(left);
+    const b = valueFor(right);
+    return typeof a === 'string' ? a.localeCompare(String(b)) * direction : (a - b) * direction;
+  });
+}
+
+function buildForecastDashboardGraph(rows, buckets) {
+  return {
+    series: buckets.map(bucket => {
+      const bucketRows = rows.map(row => row.buckets.find(item => item.bucket_start === bucket.bucket_start)).filter(Boolean);
+      return {
+        label: bucket.label,
+        bucket_start: bucket.bucket_start,
+        kind: bucket.kind,
+        demand_units: round(bucketRows.reduce((total, item) => total + Number(item.effective.projected_units ?? item.effective.units_sold ?? 0), 0)),
+        revenue: round(bucketRows.reduce((total, item) => total + Number(item.effective.projected_revenue ?? item.effective.revenue_sold ?? 0), 0)),
+        cost: round(bucketRows.reduce((total, item) => total + Number(item.effective.cost_of_goods_sold ?? item.effective.total_cost ?? 0), 0)),
+        inventory_on_hand: round(bucketRows.reduce((total, item) => total + Number(item.supply.on_hand_units || 0), 0)),
+        supply_on_order_units: round(bucketRows.reduce((total, item) => total + Number(item.supply.on_order_units || 0), 0)),
+        low_supply_rows: bucketRows.filter(item => ['stockout', 'at-risk', 'low-supply'].includes(item.supply.risk_state)).length
+      };
+    }),
+    legend: ['demand_units', 'revenue', 'cost', 'inventory_on_hand', 'supply_on_order_units'],
+    tooltip_fields: ['bucket_start', 'kind', 'demand_units', 'revenue', 'cost', 'inventory_on_hand', 'supply_on_order_units', 'low_supply_rows']
+  };
+}
+
+function forecastDashboardMetadata(items, inventory) {
+  return {
+    categories: uniqueStrings(items.map(item => item.category)).sort(),
+    brands: uniqueStrings(items.map(item => item.brand)).sort(),
+    states: uniqueStrings(items.map(item => item.status)).sort(),
+    skus: uniqueStrings(items.map(item => item.sku)).sort(),
+    locations: uniqueStrings(inventory.map(position => `${position.facility}/${position.location}`)).sort(),
+    increments: ['days', 'weeks', 'months', 'quarters', 'years'],
+    granularities: ['portfolio', 'category', 'brand', 'state', 'location', 'channel', 'sku'],
+    supply_sort_modes: ['supply_time_units', 'supply_quantity', 'on_order_quantity', 'projected_units']
+  };
+}
+
+function normalizeForecastDashboardFilterState(input, increment, granularity) {
+  return {
+    category: input.category || '',
+    brand: input.brand || '',
+    state: input.state || input.status || '',
+    sku: input.sku || '',
+    increment,
+    granularity,
+    supply_logic: input.supply_logic || input.logic || 'and',
+    sort_by: input.sort_by || input.sortBy || '',
+    sort_direction: input.sort_direction || input.sortDirection || 'asc',
+    in_stock: input.in_stock ?? '',
+    on_order: input.on_order ?? ''
+  };
+}
+
+function defaultForecastAssumptionSets(actor = 'system') {
+  return [
+    {
+      id: 'assume-base-case',
+      name: 'Base case demand',
+      version: '2026.06',
+      scope_level: 'portfolio',
+      scope_key: '*',
+      created_by: actor,
+      assumptions: {
+        seasonality_factor: 1.04,
+        promotion_uplift: 0,
+        demand_shock: 0,
+        service_level: 0.95,
+        lead_time_buffer_days: 7,
+        note: 'Stable demand with light seasonal lift.'
+      }
+    },
+    {
+      id: 'assume-promo-lift',
+      name: 'Promotion lift scenario',
+      version: '2026.06',
+      scope_level: 'portfolio',
+      scope_key: '*',
+      created_by: actor,
+      assumptions: {
+        seasonality_factor: 1.08,
+        promotion_uplift: 0.18,
+        price_move_pct: -0.08,
+        service_level: 0.98,
+        lead_time_buffer_days: 10,
+        note: 'Promotion demand lift with higher service target.'
+      }
+    },
+    {
+      id: 'assume-downside-supply',
+      name: 'Downside supply constrained',
+      version: '2026.06',
+      scope_level: 'portfolio',
+      scope_key: '*',
+      created_by: actor,
+      assumptions: {
+        seasonality_factor: 0.94,
+        promotion_uplift: 0,
+        demand_shock: -0.08,
+        cannibalization: 0.04,
+        service_level: 0.9,
+        lead_time_buffer_days: 21,
+        note: 'Demand softness with slower supplier replenishment.'
+      }
+    }
+  ];
+}
+
+function forecastMethodConfig(method) {
+  const key = String(method || 'baseline').toLowerCase();
+  if (key.includes('season')) {
+    return {
+      assumption_set_id: 'assume-base-case',
+      scenario: { seasonality_factor: 1.12 },
+      methodology: { key: 'seasonal-index-v1', family: 'seasonal-index', version: '1.0', training_window: '365 days' }
+    };
+  }
+  if (key.includes('promo')) {
+    return {
+      assumption_set_id: 'assume-promo-lift',
+      scenario: { promotion_uplift: 0.18, seasonality_factor: 1.08 },
+      methodology: { key: 'promotion-adjusted-v1', family: 'causal-adjusted', version: '1.0', training_window: '180 days' }
+    };
+  }
+  if (key.includes('agent')) {
+    return {
+      assumption_set_id: 'assume-promo-lift',
+      scenario: { promotion_uplift: 0.12, seasonality_factor: 1.1, manual_adjustment: 0.04 },
+      methodology: { key: 'agent-assisted-assumptions-v1', family: 'agent-assisted', version: '1.0', training_window: '90 days plus card context' }
+    };
+  }
+  return {
+    assumption_set_id: 'assume-base-case',
+    scenario: {},
+    methodology: { key: 'naive-baseline-v1', family: 'naive-baseline', version: '1.0', training_window: '30 days' }
+  };
+}
+
+function buildScenarioBranches(runs = []) {
+  return runs.map((run, index) => ({
+    branch_id: `branch-${index + 1}`,
+    run_id: run.id,
+    label: ['base case', 'best case', 'downside', 'custom'][index] || `scenario ${index + 1}`,
+    assumption_set_id: run.explanation?.lineage?.assumption_set_id || null,
+    projected_units: round(run.series?.[0]?.adjusted || 0),
+    driver_deltas: run.explanation?.top_drivers || [],
+    promotion_ready: index > 0
+  }));
 }
 
 function defaultConnectorContracts() {

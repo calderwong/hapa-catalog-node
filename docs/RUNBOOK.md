@@ -57,7 +57,17 @@ The same fixture is available in the web and desktop top bar through `Import 100
 
 ```bash
 node bin/hapa-catalog.mjs forecast run --sku ALPHA-RING-9 --location main-bin
+node bin/hapa-catalog.mjs forecast dashboard --increment weeks --granularity category --sort-by supply_time_units
+node bin/hapa-catalog.mjs forecast assumptions
+node bin/hapa-catalog.mjs forecast purchase-orders --sku ALPHA-RING-9
+node bin/hapa-catalog.mjs forecast override --sku ALPHA-RING-9 --bucket-start 2026-07-19 --metric projected_units --value 42 --reason-code pilot_adjustment --rationale "Design partner expects promo lift"
+node bin/hapa-catalog.mjs forecast experiment --sku ALPHA-RING-9 --methods baseline seasonal promotion --assumption-set-id assumption-seasonal-promo
+node bin/hapa-catalog.mjs forecast subscriber-payload --increment weeks --granularity sku
 ```
+
+The Forecast view in web and desktop exposes the same data as `forecast dashboard`: category, brand, state, and SKU filters; increment/granularity controls; trailing actuals; projected forecast buckets; YoY comparison rows; inventory, demand, revenue, and COGS graph bars; inline override capture with rationale; time-unit supply; supply on order; and experiment/comparison panels.
+
+Forecast runs record lineage in `explanation.lineage`: timestamp created, source data references, app/process/agent, assumption set, methodology, granularity, and scope. Overrides preserve the original value, effective value, reason, actor, and revert status, and are included in subscriber payloads for downstream in-stock and planning processes.
 
 ## Workbench And Quality
 

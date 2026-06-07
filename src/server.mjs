@@ -155,6 +155,7 @@ async function route(req, res, core) {
   }
   if (req.method === 'GET' && path === '/v1/inventory/positions') return sendJson(res, 200, core.inventory({ sku: url.searchParams.get('sku') || '', limit: Number(url.searchParams.get('limit') || 100) }));
   if (req.method === 'GET' && path === '/v1/forecasts/runs') return sendJson(res, 200, { ok: true, forecast_runs: core.store.listForecastRuns() });
+  if (req.method === 'GET' && path === '/v1/forecasts/dashboard') return sendJson(res, 200, core.forecastDashboard(queryObject(url)));
   if (req.method === 'POST' && path === '/v1/forecasts/runs') {
     const body = await parseBody(req);
     const authz = await enforceScope(req, res, core, 'forecast:write', body);
@@ -181,6 +182,52 @@ async function route(req, res, core) {
       sku: url.searchParams.get('sku') || '',
       limit: Number(url.searchParams.get('limit') || 100)
     }));
+  }
+  if (req.method === 'GET' && path === '/v1/forecasts/assumption-sets') return sendJson(res, 200, core.forecastAssumptionSets(queryObject(url)));
+  if (req.method === 'POST' && path === '/v1/forecasts/assumption-sets') {
+    const body = await parseBody(req);
+    const authz = await enforceScope(req, res, core, 'forecast:write', body);
+    if (!authz) return undefined;
+    return sendJson(res, 200, core.saveForecastAssumptionSet(body));
+  }
+  if (req.method === 'GET' && path === '/v1/forecasts/purchase-orders') return sendJson(res, 200, core.forecastPurchaseOrders(queryObject(url)));
+  if (req.method === 'POST' && path === '/v1/forecasts/purchase-orders') {
+    const body = await parseBody(req);
+    const authz = await enforceScope(req, res, core, 'forecast:write', body);
+    if (!authz) return undefined;
+    return sendJson(res, 200, core.saveForecastPurchaseOrder(body));
+  }
+  if (req.method === 'POST' && path === '/v1/forecasts/overrides') {
+    const body = await parseBody(req);
+    const authz = await enforceScope(req, res, core, 'forecast:write', body);
+    if (!authz) return undefined;
+    return sendJson(res, 200, core.createForecastOverride(body));
+  }
+  if (req.method === 'POST' && path === '/v1/forecasts/overrides/revert') {
+    const body = await parseBody(req);
+    const authz = await enforceScope(req, res, core, 'forecast:write', body);
+    if (!authz) return undefined;
+    return sendJson(res, 200, core.revertForecastOverride(body));
+  }
+  if (req.method === 'GET' && path === '/v1/forecasts/subscriber-payload') return sendJson(res, 200, core.forecastSubscriberPayload(queryObject(url)));
+  if (req.method === 'POST' && path === '/v1/forecasts/experiments/run') {
+    const body = await parseBody(req);
+    const authz = await enforceScope(req, res, core, 'forecast:write', body);
+    if (!authz) return undefined;
+    return sendJson(res, 200, core.runForecastExperiment(body));
+  }
+  if (req.method === 'GET' && path === '/v1/forecasts/experiments') return sendJson(res, 200, core.forecastExperimentation(queryObject(url)));
+  if (req.method === 'POST' && path === '/v1/forecasts/experiments/compare') {
+    const body = await parseBody(req);
+    const authz = await enforceScope(req, res, core, 'forecast:write', body);
+    if (!authz) return undefined;
+    return sendJson(res, 200, core.compareForecastRuns(body));
+  }
+  if (req.method === 'POST' && path === '/v1/forecasts/plan-of-record') {
+    const body = await parseBody(req);
+    const authz = await enforceScope(req, res, core, 'forecast:write', body);
+    if (!authz) return undefined;
+    return sendJson(res, 200, core.promoteForecastPlan(body));
   }
   if (req.method === 'GET' && path === '/v1/roles') return sendJson(res, 200, core.roles());
   if (req.method === 'GET' && path === '/v1/identities') return sendJson(res, 200, core.identities());
@@ -783,6 +830,12 @@ function identityFrom(req, body = {}) {
       || body.identity
       || 'local_operator'
   ).trim() || 'local_operator';
+}
+
+function queryObject(url) {
+  const query = {};
+  for (const [key, value] of url.searchParams.entries()) query[key] = value;
+  return query;
 }
 
 function serveFile(res, filePath) {

@@ -177,6 +177,98 @@ test('serves and imports the 100 SKU demo catalog fixture over API', async () =>
   }
 });
 
+test('serves forecast dashboard override supply and experimentation APIs', async () => {
+  const handle = await makeServer();
+  try {
+    const imported = await fetch(`${handle.url}/v1/fixtures/demo-catalog-100/import`, {
+      method: 'POST',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actor: 'api-test', limit: 100 })
+    }).then(res => res.json());
+    assert.equal(imported.ok, true);
+
+    const dashboard = await fetch(`${handle.url}/v1/forecasts/dashboard?granularity=category&increment=weeks&sort_by=supply_time_units`, { headers: auth() }).then(res => res.json());
+    assert.equal(dashboard.ok, true);
+    assert.equal(dashboard.table.buckets.length, 12);
+    assert.ok(dashboard.table.rows.length >= 8);
+    assert.ok(dashboard.purchase_orders.length >= 40);
+
+    const row = dashboard.table.rows[0];
+    const bucket = row.buckets.find(item => item.kind === 'forecast');
+    const override = await fetch(`${handle.url}/v1/forecasts/overrides`, {
+      method: 'POST',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scope_level: row.level,
+        scope_key: row.key,
+        bucket_start: bucket.bucket_start,
+        bucket_end: bucket.bucket_end,
+        field: 'projected_units',
+        value: 88,
+        reason_code: 'api_override',
+        rationale: 'API override test rationale.',
+        actor: 'api-test'
+      })
+    }).then(res => res.json());
+    assert.equal(override.ok, true);
+    assert.equal(override.override.effective_value, 88);
+
+    const adjusted = await fetch(`${handle.url}/v1/forecasts/dashboard?granularity=${row.level}&increment=weeks`, { headers: auth() }).then(res => res.json());
+    const adjustedBucket = adjusted.table.rows.find(item => item.key === row.key).buckets.find(item => item.bucket_start === bucket.bucket_start);
+    assert.equal(adjustedBucket.effective.projected_units, 88);
+
+    const assumptions = await fetch(`${handle.url}/v1/forecasts/assumption-sets`, { headers: auth() }).then(res => res.json());
+    assert.ok(assumptions.assumption_sets.some(set => set.id === 'assume-base-case'));
+
+    const savedAssumption = await fetch(`${handle.url}/v1/forecasts/assumption-sets`, {
+      method: 'POST',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: 'assume-api-test', name: 'API Test', assumptions: { promotion_uplift: 0.11 }, actor: 'api-test' })
+    }).then(res => res.json());
+    assert.equal(savedAssumption.assumption_set.id, 'assume-api-test');
+
+    const purchaseOrder = await fetch(`${handle.url}/v1/forecasts/purchase-orders`, {
+      method: 'POST',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sku: 'DEMO-WEAR-001', units: 55, expected_delivery_date: '2026-06-28T00:00:00.000Z', actor: 'api-test' })
+    }).then(res => res.json());
+    assert.equal(purchaseOrder.ok, true);
+    assert.equal(purchaseOrder.purchase_order.units, 55);
+
+    const experiment = await fetch(`${handle.url}/v1/forecasts/experiments/run`, {
+      method: 'POST',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sku: 'DEMO-WEAR-001', actor: 'api-test' })
+    }).then(res => res.json());
+    assert.equal(experiment.ok, true);
+    assert.equal(experiment.runs.length, 4);
+
+    const comparison = await fetch(`${handle.url}/v1/forecasts/experiments/compare`, {
+      method: 'POST',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ run_ids: experiment.runs.slice(0, 2).map(run => run.id), actor: 'api-test' })
+    }).then(res => res.json());
+    assert.equal(comparison.ok, true);
+    assert.equal(comparison.rows.length, 2);
+
+    const plan = await fetch(`${handle.url}/v1/forecasts/plan-of-record`, {
+      method: 'POST',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ run_id: experiment.runs[0].id, rationale: 'API plan promotion.', actor: 'api-test' })
+    }).then(res => res.json());
+    assert.equal(plan.ok, true);
+    assert.equal(plan.plan_record.status, 'active');
+
+    const payload = await fetch(`${handle.url}/v1/forecasts/subscriber-payload?sku=DEMO-WEAR-001`, { headers: auth() }).then(res => res.json());
+    assert.equal(payload.ok, true);
+    assert.equal(payload.payload.contract, 'forecast-effective-supply-subscriber-v1');
+    assert.ok(payload.payload.plan_records.length >= 1);
+  } finally {
+    handle.server.close();
+    handle.core.close();
+  }
+});
+
 test('serves post-MVP operations scaffolds over API', async () => {
   const handle = await makeServer();
   try {
