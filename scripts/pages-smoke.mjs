@@ -12,7 +12,9 @@ const data = JSON.parse(dataText);
 
 assert.ok(index.includes('id="demoApp"'));
 assert.ok(index.includes('demo-site.js'));
+assert.ok(index.includes('forecast-dashboard-v3'));
 assert.ok(script.includes('demo-data.json'));
+assert.ok(script.includes('function formatMoney'));
 assert.ok(styles.includes('--cyan'));
 assert.equal(data.ok, true);
 assert.ok(data.items.length >= 100);

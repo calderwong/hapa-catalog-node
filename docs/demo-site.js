@@ -7,7 +7,7 @@ const state = {
   selectedSku: ''
 };
 
-const ASSET_VERSION = '20260607-forecast-dashboard-v2';
+const ASSET_VERSION = '20260607-forecast-dashboard-v3';
 const VIEWS = ['items', 'board', 'cards', 'forecast', 'ops', 'docs'];
 
 const els = {
@@ -374,6 +374,10 @@ function metric(label, value) {
 
 function kv(label, value) {
   return `<div class="kv"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? ''))}</strong></div>`;
+}
+
+function formatMoney(value = 0) {
+  return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
 }
 
 function escapeHtml(value = '') {
