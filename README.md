@@ -2,6 +2,8 @@
 
 `.hapaCatalog` is a Hapa Protocol node for catalog ingestion, global item mastering, inventory visibility, identity/permission governance, item browsing, and explainable demand forecasting.
 
+Demo: [GitHub Pages static demo](https://calderwong.github.io/hapa-catalog-node/)
+
 Status: tested MVP plus post-MVP operations scaffold with SQLite-backed local data, API/CLI/web/desktop surfaces, seeded governance roles, Hapa card placement, staged imports, item search, inventory positions, forecast explanations, audit events, telemetry, and an append-only Hapa Kanban board.
 
 ## Hapa Invariants
