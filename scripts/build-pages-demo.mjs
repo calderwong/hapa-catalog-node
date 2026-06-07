@@ -70,18 +70,100 @@ function compactOps(ops) {
   };
 }
 
+const FORECAST_GRAINS = ['category', 'brand', 'state', 'sku'];
+const FORECAST_INCREMENTS = ['days', 'weeks', 'months', 'quarters', 'years'];
+
+function compactForecastDashboard(dashboard) {
+  return {
+    ok: dashboard.ok,
+    contract: dashboard.contract,
+    filter_state: dashboard.filter_state,
+    hierarchy: dashboard.hierarchy,
+    assumption_set: dashboard.assumption_set,
+    purchase_orders: dashboard.purchase_orders.map(order => ({
+      id: order.id,
+      sku_id: order.sku_id,
+      units: order.units,
+      status: order.status,
+      expected_delivery_date: order.expected_delivery_date
+    })),
+    graph: {
+      series: (dashboard.graph?.series || []).map(point => ({
+        label: point.label,
+        kind: point.kind,
+        demand_units: point.demand_units,
+        revenue: point.revenue,
+        cost: point.cost,
+        inventory_on_hand: point.inventory_on_hand
+      }))
+    },
+    table: {
+      increment: dashboard.table.increment,
+      granularity: dashboard.table.granularity,
+      buckets: dashboard.table.buckets.map(bucket => ({
+        index: bucket.index,
+        label: bucket.label,
+        bucket_start: bucket.bucket_start,
+        bucket_end: bucket.bucket_end,
+        kind: bucket.kind,
+        days: bucket.days
+      })),
+      rows: dashboard.table.rows.map(row => ({
+        key: row.key,
+        label: row.label,
+        level: row.level,
+        sku_count: row.sku_count,
+        skus: row.skus,
+        risk_state: row.risk_state,
+        buckets: row.buckets.map(bucket => ({
+          index: bucket.index,
+          label: bucket.label,
+          bucket_start: bucket.bucket_start,
+          bucket_end: bucket.bucket_end,
+          kind: bucket.kind,
+          effective: {
+            units_sold: bucket.effective?.units_sold,
+            revenue_sold: bucket.effective?.revenue_sold,
+            total_cost: bucket.effective?.total_cost,
+            projected_units: bucket.effective?.projected_units,
+            projected_revenue: bucket.effective?.projected_revenue,
+            cost_of_goods_sold: bucket.effective?.cost_of_goods_sold,
+            projected_inventory_on_hand: bucket.effective?.projected_inventory_on_hand,
+            supply_on_order_units: bucket.effective?.supply_on_order_units
+          },
+          yoy: bucket.yoy,
+          supply: {
+            time_unit: bucket.supply?.time_unit,
+            on_hand_units: bucket.supply?.on_hand_units,
+            on_hand_time_units: bucket.supply?.on_hand_time_units,
+            on_order_units: bucket.supply?.on_order_units,
+            on_order_time_units: bucket.supply?.on_order_time_units,
+            received_units: bucket.supply?.received_units,
+            risk_state: bucket.supply?.risk_state
+          }
+        }))
+      }))
+    }
+  };
+}
+
+function buildForecastDashboards() {
+  return Object.fromEntries(FORECAST_INCREMENTS.map(increment => [
+    increment,
+    Object.fromEntries(FORECAST_GRAINS.map(granularity => [
+      granularity,
+      compactForecastDashboard(core.forecastDashboard({ granularity, increment, sort_by: 'supply_time_units' }))
+    ]))
+  ]));
+}
+
 const items = core.listItems({ limit: 120 }).items;
 const selectedItem = items[0] ? core.getItem(items[0].sku).item : null;
 const demoFixture = core.demoCatalogRecords({ limit: 100 });
 const marketPrices = core.marketPrices({ limit: 120 });
 const marketListing = core.marketListingData({ limit: 120 });
-const forecastDashboards = {
-  category: core.forecastDashboard({ granularity: 'category', increment: 'weeks', sort_by: 'supply_time_units' }),
-  brand: core.forecastDashboard({ granularity: 'brand', increment: 'weeks', sort_by: 'supply_time_units' }),
-  state: core.forecastDashboard({ granularity: 'state', increment: 'weeks', sort_by: 'supply_time_units' }),
-  sku: core.forecastDashboard({ granularity: 'sku', increment: 'weeks', sort_by: 'supply_time_units' })
-};
-const forecastDashboard = forecastDashboards.category;
+const forecastDashboards = buildForecastDashboards();
+const forecastDashboard = forecastDashboards.weeks.category;
 const forecastExperimentation = core.forecastExperimentation({ granularity: 'category', increment: 'weeks' });
 const board = core.kanbanBoard().board;
 const ops = core.opsOverview();

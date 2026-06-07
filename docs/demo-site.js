@@ -6,11 +6,22 @@ const state = {
   status: '',
   selectedSku: '',
   forecastMetric: 'demand_units',
-  forecastGrain: 'category'
+  forecastGrain: 'category',
+  forecastIncrement: 'weeks',
+  forecastOverrideReason: 'planning adjustment',
+  forecastOverrides: []
 };
 
-const ASSET_VERSION = '20260607-forecast-dashboard-v4';
+const ASSET_VERSION = '20260607-forecast-dashboard-v5';
 const VIEWS = ['items', 'board', 'cards', 'forecast', 'ops', 'docs'];
+const FORECAST_OVERRIDE_STORAGE_KEY = 'hapaCatalogForecastOverrides:v1';
+const FORECAST_INCREMENTS = [
+  { key: 'days', label: 'Day' },
+  { key: 'weeks', label: 'Week' },
+  { key: 'months', label: 'Month' },
+  { key: 'quarters', label: 'Quarter' },
+  { key: 'years', label: 'Year' }
+];
 const FORECAST_METRICS = [
   { key: 'demand_units', label: 'Units', actual: 'Units sold', forecast: 'Projected units', format: 'number' },
   { key: 'revenue', label: 'Revenue', actual: 'Revenue sold', forecast: 'Projected revenue', format: 'money' },
@@ -39,10 +50,12 @@ const els = {
 };
 
 let demo = null;
+let memoryForecastOverrides = [];
 
 async function init() {
   if (!VIEWS.includes(state.view)) state.view = 'items';
   demo = await fetch(`demo-data.json?v=${ASSET_VERSION}`).then(response => response.json());
+  state.forecastOverrides = loadForecastOverrides();
   state.selectedSku = demo.items[0]?.sku || '';
   els.githubLink.href = demo.repo.github_url;
   els.generatedAt.textContent = `Generated ${new Date(demo.generated_at).toLocaleString()}`;
@@ -257,8 +270,9 @@ function renderForecast() {
   const metricConfig = forecastMetricConfig();
   const rows = forecastFilteredRows(dashboard);
   const demandSeries = demandSeriesFromRows(dashboard.table.buckets || [], rows);
+  const activeOverrideCount = activeForecastOverrides().length;
   els.listTitle.textContent = 'Forecast Dashboard';
-  els.listMeta.textContent = `${rows.length} ${state.forecastGrain} rows / ${metricConfig.label} / ${dashboard.purchase_orders.length} purchase orders`;
+  els.listMeta.textContent = `${rows.length} ${state.forecastGrain} rows / ${state.forecastIncrement} / ${metricConfig.label} / ${activeOverrideCount} changes`;
   els.list.className = 'list forecast-dashboard';
   els.list.innerHTML = `
     ${forecastControls(dashboard, metricConfig)}
@@ -267,27 +281,41 @@ function renderForecast() {
   `;
   attachForecastControls();
   els.inspectorBadge.textContent = 'forecast';
+  renderForecastInspector(dashboard, metricConfig);
+}
+
+function renderForecastInspector(dashboard, metricConfig) {
+  const changes = activeForecastOverrides();
   els.inspectorBody.innerHTML = `
     ${kv('Grain', state.forecastGrain)}
+    ${kv('Time unit', state.forecastIncrement)}
     ${kv('Metric', metricConfig.label)}
+    ${kv('Changes', changes.length)}
     ${kv('Forecasts', demo.summary.forecast_runs)}
-    ${kv('Actuals', demo.summary.forecast_actuals)}
-    ${kv('Quality events', demo.summary.forecast_quality_events)}
-    ${kv('Assumption sets', demo.forecast_experimentation.assumption_sets.length)}
-    ${kv('Plan records', demo.forecast_experimentation.plan_records.length)}
     <div class="section">
-      <h3>Active Assumption Set</h3>
+      <h3>Assumption Set</h3>
       <p class="empty">${escapeHtml(dashboard.assumption_set?.name || 'No assumption set')}</p>
     </div>
     <div class="section">
-      <h3>Methodology Comparison</h3>
-      <p class="empty">${escapeHtml(demo.forecast_experimentation.comparison?.winner?.method || demo.forecast_experimentation.comparison?.winner?.key || 'Comparison available after local experiment run.')}</p>
+      <h3>Change Ledger</h3>
+      ${changes.length ? changes.slice(0, 8).map(change => `
+        <article class="change-card">
+          <strong>${escapeHtml(change.scope_label)} / ${escapeHtml(change.bucket_label)}</strong>
+          <p>${escapeHtml(change.metric_label)}: ${formatMetricValue(change.original_value, metricConfigForKey(change.metric))} -> ${formatMetricValue(change.override_value, metricConfigForKey(change.metric))}</p>
+          <small>${escapeHtml(change.reason)} / ${escapeHtml(new Date(change.created_at).toLocaleString())}</small>
+          <button type="button" data-revert-override="${escapeAttribute(change.id)}">Revert</button>
+        </article>
+      `).join('') : '<p class="empty">No forecast changes for this grain and time unit.</p>'}
+      ${changes.length ? '<button type="button" id="clearForecastOverrides">Clear changes</button>' : ''}
     </div>
   `;
+  attachForecastLedgerControls();
 }
 
 function selectedForecastDashboard() {
-  return demo.forecast_dashboards?.[state.forecastGrain] || demo.forecast_dashboard;
+  return demo.forecast_dashboards?.[state.forecastIncrement]?.[state.forecastGrain]
+    || demo.forecast_dashboards?.[state.forecastGrain]
+    || demo.forecast_dashboard;
 }
 
 function forecastMetricConfig() {
@@ -315,9 +343,20 @@ function forecastControls(dashboard, metricConfig) {
           ${['category', 'brand', 'state', 'sku'].map(grain => `<option value="${escapeAttribute(grain)}" ${grain === state.forecastGrain ? 'selected' : ''}>${escapeHtml(grain)}</option>`).join('')}
         </select>
       </label>
+      <label>
+        <span>Time unit</span>
+        <select id="forecastIncrement">
+          ${FORECAST_INCREMENTS.map(increment => `<option value="${escapeAttribute(increment.key)}" ${increment.key === state.forecastIncrement ? 'selected' : ''}>${escapeHtml(increment.label)}</option>`).join('')}
+        </select>
+      </label>
+      <label class="reason-field">
+        <span>Reason</span>
+        <input id="forecastOverrideReason" value="${escapeAttribute(state.forecastOverrideReason)}" />
+      </label>
       <div class="forecast-legend" aria-label="Actual and forecast legend">
         <span class="legend-chip actual">Actual</span>
         <span class="legend-chip forecast">Forecast</span>
+        <span class="legend-chip modified">Modified</span>
       </div>
       <p>${escapeHtml(metricConfig.actual)} switches to ${escapeHtml(metricConfig.forecast)} at the forecast boundary. ${filterLabels.length ? `Filters: ${filterLabels.join(' / ')}` : 'Sidebar search and filters apply to this table.'}</p>
     </section>
@@ -327,6 +366,8 @@ function forecastControls(dashboard, metricConfig) {
 function attachForecastControls() {
   const metricSelect = els.list.querySelector('#forecastMetric');
   const grainSelect = els.list.querySelector('#forecastGrain');
+  const incrementSelect = els.list.querySelector('#forecastIncrement');
+  const reasonInput = els.list.querySelector('#forecastOverrideReason');
   metricSelect?.addEventListener('change', () => {
     state.forecastMetric = metricSelect.value;
     renderForecast();
@@ -334,6 +375,18 @@ function attachForecastControls() {
   grainSelect?.addEventListener('change', () => {
     state.forecastGrain = grainSelect.value;
     renderForecast();
+  });
+  incrementSelect?.addEventListener('change', () => {
+    state.forecastIncrement = incrementSelect.value;
+    renderForecast();
+  });
+  reasonInput?.addEventListener('input', () => {
+    state.forecastOverrideReason = reasonInput.value.trim() || 'planning adjustment';
+  });
+  els.list.querySelectorAll('[data-override-apply]').forEach(button => {
+    button.addEventListener('click', () => {
+      applyForecastOverride(button);
+    });
   });
 }
 
@@ -359,17 +412,10 @@ function forecastRowMatches(row) {
 
 function demandSeriesFromRows(buckets, rows) {
   return buckets.map((bucket, bucketIndex) => {
-    const demand = rows.reduce((total, row) => total + Number(demandValue(row.buckets[bucketIndex]) || 0), 0);
-    const revenue = rows.reduce((total, row) => total + Number(metricValue(row.buckets[bucketIndex], 'revenue') || 0), 0);
+    const demand = rows.reduce((total, row) => total + Number(effectiveMetricValue(row, row.buckets[bucketIndex], 'demand_units', bucketIndex) || 0), 0);
+    const revenue = rows.reduce((total, row) => total + Number(effectiveMetricValue(row, row.buckets[bucketIndex], 'revenue', bucketIndex) || 0), 0);
     return { ...bucket, demand_units: demand, revenue };
   });
-}
-
-function demandValue(bucket) {
-  if (!bucket) return 0;
-  return bucket.kind === 'actual'
-    ? Number(bucket.effective?.units_sold || 0)
-    : Number(bucket.effective?.projected_units || 0);
 }
 
 function staticDemandLineChart(series = []) {
@@ -433,13 +479,51 @@ function staticForecastTable(dashboard, metricConfig) {
           ${(dashboard.table.rows || []).slice(0, 12).map(row => `
             <tr class="metric-row">
               <th><strong>${escapeHtml(row.label)}</strong><small>${escapeHtml(row.level)} / ${row.sku_count} SKU / ${escapeHtml(row.risk_state)}</small></th>
-              ${row.buckets.map(bucket => `<td class="${bucket.kind === 'actual' ? 'actual-cell' : 'forecast-cell'}"><strong>${formatMetricValue(metricValue(bucket, metricConfig.key), metricConfig)}</strong><small>${escapeHtml(bucket.kind === 'actual' ? 'actual' : 'forecast')}</small></td>`).join('')}
+              ${row.buckets.map((bucket, bucketIndex) => renderMetricCell(row, bucket, bucketIndex, metricConfig)).join('')}
             </tr>
             <tr class="yoy-row"><th>YoY demand</th>${row.buckets.map(bucket => `<td>${bucket.yoy.units_variance_percent > 0 ? '+' : ''}${bucket.yoy.units_variance_percent}%</td>`).join('')}</tr>
           `).join('') || `<tr><td colspan="${buckets.length + 1}">No forecast dashboard rows.</td></tr>`}
         </tbody>
       </table>
     </section>
+  `;
+}
+
+function renderMetricCell(row, bucket, bucketIndex, metricConfig) {
+  const base = metricValue(bucket, metricConfig.key);
+  const override = forecastOverrideFor(row, bucket, metricConfig.key);
+  const effective = bucket.kind === 'forecast' && override ? Number(override.override_value) : base;
+  const classes = [
+    bucket.kind === 'actual' ? 'actual-cell' : 'forecast-cell',
+    override ? 'modified-cell' : ''
+  ].filter(Boolean).join(' ');
+  if (bucket.kind !== 'forecast') {
+    return `<td class="${classes}"><strong>${formatMetricValue(effective, metricConfig)}</strong><small>actual</small></td>`;
+  }
+  return `
+    <td class="${classes}">
+      <strong>${formatMetricValue(effective, metricConfig)}</strong>
+      <small>${override ? 'modified forecast' : 'forecast'}</small>
+      <div class="override-control">
+        <input
+          type="number"
+          min="0"
+          step="${escapeAttribute(metricInputStep(metricConfig))}"
+          value="${escapeAttribute(formatInputValue(effective, metricConfig))}"
+          aria-label="Override ${escapeAttribute(row.label)} ${escapeAttribute(bucket.label)} ${escapeAttribute(metricConfig.label)}"
+        />
+        <button
+          type="button"
+          data-override-apply="true"
+          data-row-key="${escapeAttribute(row.key)}"
+          data-row-label="${escapeAttribute(row.label)}"
+          data-bucket-index="${bucketIndex}"
+          data-bucket-start="${escapeAttribute(bucket.bucket_start)}"
+          data-bucket-label="${escapeAttribute(bucket.label)}"
+          data-metric="${escapeAttribute(metricConfig.key)}"
+        >Set</button>
+      </div>
+    </td>
   `;
 }
 
@@ -455,11 +539,127 @@ function metricValue(bucket, metricKey) {
   return bucket.kind === 'actual' ? effective.units_sold : effective.projected_units;
 }
 
+function effectiveMetricValue(row, bucket, metricKey, bucketIndex) {
+  const base = metricValue(bucket, metricKey);
+  if (bucket?.kind !== 'forecast') return base;
+  const override = forecastOverrideFor(row, bucket, metricKey, bucketIndex);
+  return override ? Number(override.override_value) : base;
+}
+
 function formatMetricValue(value, metricConfig) {
   const number = Number(value || 0);
   if (metricConfig.format === 'money') return `$${formatMoney(number)}`;
   if (metricConfig.format === 'decimal') return number.toLocaleString(undefined, { maximumFractionDigits: 2 });
   return Math.round(number).toLocaleString();
+}
+
+function metricInputStep(metricConfig) {
+  if (metricConfig.format === 'decimal') return '0.1';
+  return '1';
+}
+
+function formatInputValue(value, metricConfig) {
+  const number = Number(value || 0);
+  if (metricConfig.format === 'decimal') return number.toFixed(2);
+  return String(Math.round(number));
+}
+
+function loadForecastOverrides() {
+  try {
+    if (!globalThis.localStorage) return memoryForecastOverrides;
+    const parsed = JSON.parse(localStorage.getItem(FORECAST_OVERRIDE_STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return memoryForecastOverrides;
+  }
+}
+
+function saveForecastOverrides() {
+  memoryForecastOverrides = [...state.forecastOverrides];
+  try {
+    if (globalThis.localStorage) localStorage.setItem(FORECAST_OVERRIDE_STORAGE_KEY, JSON.stringify(state.forecastOverrides));
+  } catch {
+    // Static demo keeps in-memory changes when browser storage is unavailable.
+  }
+}
+
+function activeForecastOverrides() {
+  return state.forecastOverrides
+    .filter(change => change.increment === state.forecastIncrement && change.grain === state.forecastGrain)
+    .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+}
+
+function forecastOverrideKey({ rowKey, bucketStart, metric }) {
+  return [state.forecastIncrement, state.forecastGrain, rowKey, bucketStart, metric].join('|');
+}
+
+function forecastOverrideFor(row, bucket, metric, bucketIndex = 0) {
+  const key = forecastOverrideKey({
+    rowKey: row.key,
+    bucketStart: bucket?.bucket_start || bucketIndex,
+    metric
+  });
+  return state.forecastOverrides.find(change => change.key === key) || null;
+}
+
+function applyForecastOverride(button) {
+  const cell = button.closest('td');
+  const input = cell?.querySelector('input');
+  const overrideValue = Number(input?.value);
+  if (!Number.isFinite(overrideValue) || overrideValue < 0) return;
+  const dashboard = selectedForecastDashboard();
+  const row = (dashboard.table.rows || []).find(item => item.key === button.dataset.rowKey);
+  const bucketIndex = Number(button.dataset.bucketIndex || 0);
+  const bucket = row?.buckets?.[bucketIndex];
+  if (!row || !bucket) return;
+  const metric = button.dataset.metric || state.forecastMetric;
+  const metricConfig = metricConfigForKey(metric);
+  const originalValue = metricValue(bucket, metric);
+  const key = forecastOverrideKey({
+    rowKey: row.key,
+    bucketStart: button.dataset.bucketStart,
+    metric
+  });
+  const change = {
+    id: `forecast-change-${Date.now()}`,
+    key,
+    created_at: new Date().toISOString(),
+    increment: state.forecastIncrement,
+    grain: state.forecastGrain,
+    scope_key: row.key,
+    scope_label: button.dataset.rowLabel || row.label,
+    bucket_start: button.dataset.bucketStart,
+    bucket_label: button.dataset.bucketLabel || bucket.label,
+    metric,
+    metric_label: metricConfig.label,
+    original_value: originalValue,
+    override_value: overrideValue,
+    reason: state.forecastOverrideReason || 'planning adjustment',
+    actor: 'pages-demo-user'
+  };
+  state.forecastOverrides = [change, ...state.forecastOverrides.filter(item => item.key !== key)];
+  saveForecastOverrides();
+  renderForecast();
+}
+
+function attachForecastLedgerControls() {
+  els.inspectorBody.querySelectorAll('[data-revert-override]').forEach(button => {
+    button.addEventListener('click', () => {
+      state.forecastOverrides = state.forecastOverrides.filter(change => change.id !== button.dataset.revertOverride);
+      saveForecastOverrides();
+      renderForecast();
+    });
+  });
+  els.inspectorBody.querySelector('#clearForecastOverrides')?.addEventListener('click', () => {
+    const activeKeys = new Set(activeForecastOverrides().map(change => change.key));
+    state.forecastOverrides = state.forecastOverrides.filter(change => !activeKeys.has(change.key));
+    saveForecastOverrides();
+    renderForecast();
+  });
+}
+
+function metricConfigForKey(metric) {
+  return FORECAST_METRICS.find(item => item.key === metric) || FORECAST_METRICS[0];
 }
 
 function renderOps() {

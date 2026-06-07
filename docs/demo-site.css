@@ -409,7 +409,7 @@ small {
 
 .forecast-toolbar {
   display: grid;
-  grid-template-columns: minmax(130px, 180px) minmax(130px, 180px) auto;
+  grid-template-columns: minmax(120px, 170px) minmax(120px, 170px) minmax(120px, 170px) minmax(180px, 1fr) auto;
   gap: 10px;
   align-items: end;
   padding: 10px;
@@ -421,6 +421,10 @@ small {
 .forecast-toolbar label {
   display: grid;
   gap: 5px;
+}
+
+.forecast-toolbar .reason-field {
+  min-width: 0;
 }
 
 .forecast-toolbar label span,
@@ -459,6 +463,11 @@ small {
 .legend-chip.forecast {
   color: #d9f99d;
   background: rgba(75, 227, 138, 0.12);
+}
+
+.legend-chip.modified {
+  color: #fbcfe8;
+  background: rgba(244, 114, 182, 0.13);
 }
 
 .forecast-chart {
@@ -653,6 +662,12 @@ small {
   background: rgba(75, 227, 138, 0.055);
 }
 
+.metric-row .modified-cell {
+  outline: 1px solid rgba(244, 114, 182, 0.5);
+  outline-offset: -1px;
+  background: rgba(244, 114, 182, 0.1);
+}
+
 .forecast-cell strong,
 .actual-cell strong {
   display: block;
@@ -661,11 +676,53 @@ small {
   line-height: 1.15;
 }
 
+.override-control {
+  display: grid;
+  grid-template-columns: minmax(64px, 1fr) auto;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.override-control input {
+  min-height: 30px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.override-control button,
+.change-card button,
+#clearForecastOverrides {
+  min-height: 30px;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
 .yoy-row td,
 .yoy-row th {
   color: var(--muted);
   font-size: 11px;
   background: rgba(15, 23, 42, 0.38);
+}
+
+.change-card {
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid rgba(244, 114, 182, 0.28);
+  border-radius: 8px;
+  background: rgba(244, 114, 182, 0.08);
+}
+
+.change-card p,
+.change-card small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+}
+
+.change-card button {
+  margin-top: 8px;
 }
 
 .checkpoint,
