@@ -418,3 +418,31 @@ The forecast visualization dashboard refill creates 25 cards:
 - Phase 52: HCAT-295 hybrid actual/forecast table shell, HCAT-296 actuals metrics cells, HCAT-297 forecast projection metrics cells, HCAT-298 increment selector, and HCAT-299 YoY comparison row.
 - Phase 53: HCAT-300 inventory and demand graph series, HCAT-301 revenue/cost/COGS graph series, HCAT-302 tooltip/legend/axis formatting, HCAT-303 chart/table selection coordination, and HCAT-304 visual QA.
 - Phase 54: HCAT-305 core/API tests, HCAT-306 web/desktop smoke coverage, HCAT-307 docs, HCAT-308 GitHub Pages demo update, and HCAT-309 drain acceptance.
+
+## Forecast Lineage, Overrides, And Supply Refill
+
+The forecast visualization dashboard has an extension tranche, HCAT-310 through HCAT-324, that adds forecast lineage, override governance, time-unit supply, purchase-order simulation, and supply-aware filtering/sorting.
+
+### Phase 55: Forecast Lineage And Override Controls
+
+Make every forecast accountable and editable. This phase covers forecast lineage metadata, forecast table overrides, required override rationale, effective values for visualization/subscribers, and override history/rollback.
+
+Primary outcome: every forecast value can be traced back to its timestamp, source data, generating agent/process/app, and every manual change carries rationale, actor, audit, and revert behavior.
+
+### Phase 56: Time Unit Supply Metrics
+
+Add inventory realism to the forecast dashboard. This phase covers time-unit supply calculations, simulated purchase orders with delivery dates, projected inventory with supply on order, on-order supply in units and time units, and risk-state flags.
+
+Primary outcome: operators can see how long current and inbound inventory can cover projected demand, not just whether stock is present today.
+
+### Phase 57: Supply Filters Sorts And Subscriber Outputs
+
+Make supply metrics operational. This phase covers stacked filters and sort controls by supply quantity/time units, AND/OR filter semantics for in-stock and on-order states, effective forecast/supply subscriber payloads, docs/tests, and final drain acceptance.
+
+Primary outcome: downstream consumers and operators can subscribe to, filter, and sort effective forecast/supply views with clear override and purchase-order lineage.
+
+The forecast lineage/override/supply refill creates 15 cards:
+
+- Phase 55: HCAT-310 forecast lineage metadata, HCAT-311 table overrides, HCAT-312 override reason and approval context, HCAT-313 effective values for table/graph/subscribers, and HCAT-314 override history/rollback/audit trail.
+- Phase 56: HCAT-315 time-unit supply from forecast rate, HCAT-316 simulated purchase orders, HCAT-317 projected inventory with supply on order, HCAT-318 supply on order in units and time units, and HCAT-319 supply risk and stockout thresholds.
+- Phase 57: HCAT-320 supply filters/sort controls, HCAT-321 AND/OR supply filter logic, HCAT-322 subscriber payloads, HCAT-323 tests/docs, and HCAT-324 drain acceptance.

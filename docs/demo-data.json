@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generated_at": "2026-06-07T17:21:57.718Z",
+  "generated_at": "2026-06-07T17:31:53.250Z",
   "repo": {
     "name": "hapa-catalog-node",
     "github_url": "https://github.com/calderwong/hapa-catalog-node",
@@ -15,7 +15,7 @@
     "display_name": ".hapaCatalog",
     "api_version": "1.0.0",
     "contract_version": "hapa-catalog-node/0.1.0",
-    "time": "2026-06-07T17:21:57.718Z",
+    "time": "2026-06-07T17:31:53.251Z",
     "storage": {
       "db_path": "[local-path-redacted]",
       "data_dir": "[local-path-redacted]"
@@ -10041,7 +10041,7 @@
           "surface": "Protocol guardrail"
         },
         "created_at": "2026-06-05T22:40:54.880Z",
-        "updated_at": "2026-06-07T17:21:57.663Z",
+        "updated_at": "2026-06-07T17:31:53.219Z",
         "card": {
           "id": "card-protocol-source-truth",
           "card_kind": "protocol",
@@ -10091,7 +10091,7 @@
           "surface": "Process cycle"
         },
         "created_at": "2026-06-05T22:40:54.879Z",
-        "updated_at": "2026-06-07T17:21:57.663Z",
+        "updated_at": "2026-06-07T17:31:53.218Z",
         "card": {
           "id": "card-avatar-forecast-friend",
           "card_kind": "avatar",
@@ -10141,7 +10141,7 @@
           "surface": "Catalog/SKU governance"
         },
         "created_at": "2026-06-05T22:40:54.879Z",
-        "updated_at": "2026-06-07T17:21:57.662Z",
+        "updated_at": "2026-06-07T17:31:53.217Z",
         "card": {
           "id": "card-avatar-inventory-governor",
           "card_kind": "avatar",
@@ -10226,56 +10226,6 @@
         }
       },
       {
-        "id": "placement-card-avatar-inventory-governor-governance-role-role-inventory-planner-advisor",
-        "card_id": "card-avatar-inventory-governor",
-        "placement_type": "governance_role",
-        "target_type": "role",
-        "target_id": "inventory_planner",
-        "role": "advisor",
-        "decision_mode": "context",
-        "priority": 20,
-        "cadence": "inventory-cycle",
-        "active": true,
-        "metadata": {
-          "placed_by": "seed",
-          "surface": "Governance roles"
-        },
-        "created_at": "2026-06-05T22:40:54.879Z",
-        "updated_at": "2026-06-07T17:21:57.663Z",
-        "card": {
-          "id": "card-avatar-inventory-governor",
-          "card_kind": "avatar",
-          "name": "Inventory Governor Avatar",
-          "owner_identity_id": "local_operator",
-          "organization_id": "hapa-local",
-          "source_node": "hapa-avatar-node",
-          "card_ref": "avatar://inventory-governor",
-          "skills": [
-            "inventory management",
-            "in-stock governance",
-            "replenishment review"
-          ],
-          "context": {
-            "voice": "Inventory operator focused on in-stock truth, safety stock, reorder risk, and stockout prevention.",
-            "decision_bias": "Prefer keeping sellable SKUs in stock while surfacing inventory uncertainty before committing replenishment actions.",
-            "checks": [
-              "available quantity",
-              "below reorder point",
-              "in transit coverage",
-              "stockout risk"
-            ]
-          },
-          "tags": [
-            "avatar",
-            "inventory",
-            "governor"
-          ],
-          "status": "active",
-          "created_at": "2026-06-05T22:40:54.878Z",
-          "updated_at": "2026-06-05T22:40:54.878Z"
-        }
-      },
-      {
         "id": "placement-card-avatar-forecast-friend-governance-role-role-demand-planner-advisor",
         "card_id": "card-avatar-forecast-friend",
         "placement_type": "governance_role",
@@ -10291,7 +10241,7 @@
           "surface": "Governance roles"
         },
         "created_at": "2026-06-05T22:40:54.880Z",
-        "updated_at": "2026-06-07T17:21:57.663Z",
+        "updated_at": "2026-06-07T17:31:53.219Z",
         "card": {
           "id": "card-avatar-forecast-friend",
           "card_kind": "avatar",
@@ -10324,6 +10274,56 @@
           "created_at": "2026-06-05T22:40:54.878Z",
           "updated_at": "2026-06-05T22:40:54.878Z"
         }
+      },
+      {
+        "id": "placement-card-avatar-inventory-governor-governance-role-role-inventory-planner-advisor",
+        "card_id": "card-avatar-inventory-governor",
+        "placement_type": "governance_role",
+        "target_type": "role",
+        "target_id": "inventory_planner",
+        "role": "advisor",
+        "decision_mode": "context",
+        "priority": 20,
+        "cadence": "inventory-cycle",
+        "active": true,
+        "metadata": {
+          "placed_by": "seed",
+          "surface": "Governance roles"
+        },
+        "created_at": "2026-06-05T22:40:54.879Z",
+        "updated_at": "2026-06-07T17:31:53.218Z",
+        "card": {
+          "id": "card-avatar-inventory-governor",
+          "card_kind": "avatar",
+          "name": "Inventory Governor Avatar",
+          "owner_identity_id": "local_operator",
+          "organization_id": "hapa-local",
+          "source_node": "hapa-avatar-node",
+          "card_ref": "avatar://inventory-governor",
+          "skills": [
+            "inventory management",
+            "in-stock governance",
+            "replenishment review"
+          ],
+          "context": {
+            "voice": "Inventory operator focused on in-stock truth, safety stock, reorder risk, and stockout prevention.",
+            "decision_bias": "Prefer keeping sellable SKUs in stock while surfacing inventory uncertainty before committing replenishment actions.",
+            "checks": [
+              "available quantity",
+              "below reorder point",
+              "in transit coverage",
+              "stockout risk"
+            ]
+          },
+          "tags": [
+            "avatar",
+            "inventory",
+            "governor"
+          ],
+          "status": "active",
+          "created_at": "2026-06-05T22:40:54.878Z",
+          "updated_at": "2026-06-05T22:40:54.878Z"
+        }
       }
     ],
     "processes": [
@@ -10348,7 +10348,7 @@
           "description": "Review inventory positions, reorder risk, and stockout prevention with placed Hapa cards."
         },
         "created_at": "2026-06-05T22:40:54.880Z",
-        "updated_at": "2026-06-07T17:21:57.664Z"
+        "updated_at": "2026-06-07T17:31:53.219Z"
       },
       {
         "id": "process-catalog-sku-review",
@@ -10371,7 +10371,7 @@
           "description": "Review item master changes, identifiers, media, and catalog quality with placed Hapa cards."
         },
         "created_at": "2026-06-05T22:40:54.881Z",
-        "updated_at": "2026-06-07T17:21:57.664Z"
+        "updated_at": "2026-06-07T17:31:53.219Z"
       },
       {
         "id": "process-forecast-cycle",
@@ -10394,7 +10394,7 @@
           "description": "Review forecast runs, actuals, and scenario assumptions with placed Hapa cards."
         },
         "created_at": "2026-06-05T22:40:54.880Z",
-        "updated_at": "2026-06-07T17:21:57.664Z"
+        "updated_at": "2026-06-07T17:31:53.219Z"
       },
       {
         "id": "process-pilot-forecast-instock-review",
@@ -24410,8 +24410,8 @@
   "board": {
     "project_id": "hapa-app-hapa-catalog-node",
     "available": true,
-    "event_count": 622,
-    "updated_at": "2026-06-07T17:21:25.000Z",
+    "event_count": 638,
+    "updated_at": "2026-06-07T17:35:15.000Z",
     "columns": [
       {
         "id": "backlog",
@@ -24777,6 +24777,188 @@
             ],
             "evidence": [],
             "updated_at": "2026-06-07T17:21:24.000Z"
+          },
+          {
+            "id": "HCAT-315",
+            "title": "Calculate time unit of supply from forecast rate",
+            "description": "Measure day/week/month/quarter/year supply from projected inventory on hand divided by forecasted unit demand rate for the active increment.",
+            "column": "backlog",
+            "lane": "Phase 56 Time Unit Supply Metrics",
+            "owner": "Green",
+            "priority": "P0",
+            "tags": [
+              "supply",
+              "inventory",
+              "forecast-rate"
+            ],
+            "requirements": [
+              "HCAT-315"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:05.000Z"
+          },
+          {
+            "id": "HCAT-316",
+            "title": "Simulate purchase orders with delivery dates",
+            "description": "Generate dummy purchase orders with SKU, supplier, units, cost, status, order date, expected delivery date, and receiving bucket.",
+            "column": "backlog",
+            "lane": "Phase 56 Time Unit Supply Metrics",
+            "owner": "Orange",
+            "priority": "P0",
+            "tags": [
+              "purchase-orders",
+              "on-order"
+            ],
+            "requirements": [
+              "HCAT-316"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:06.000Z"
+          },
+          {
+            "id": "HCAT-317",
+            "title": "Project inventory with supply on order",
+            "description": "Project inventory positions forward by applying simulated purchase order deliveries to forecasted consumption over time.",
+            "column": "backlog",
+            "lane": "Phase 56 Time Unit Supply Metrics",
+            "owner": "Blue",
+            "priority": "P0",
+            "tags": [
+              "on-order-supply",
+              "inventory-projection"
+            ],
+            "requirements": [
+              "HCAT-317"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:07.000Z"
+          },
+          {
+            "id": "HCAT-318",
+            "title": "Render supply on order in units and time units",
+            "description": "Expose Supply On Order both as units and as selected time-unit supply relative to projected forecast rate.",
+            "column": "backlog",
+            "lane": "Phase 56 Time Unit Supply Metrics",
+            "owner": "Violet",
+            "priority": "P1",
+            "tags": [
+              "on-order-time-supply",
+              "metrics"
+            ],
+            "requirements": [
+              "HCAT-318"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:08.000Z"
+          },
+          {
+            "id": "HCAT-319",
+            "title": "Flag supply risk and stockout thresholds",
+            "description": "Classify in-stock, low-supply, at-risk, stockout, and on-order-covered states based on projected inventory and forecast demand.",
+            "column": "backlog",
+            "lane": "Phase 56 Time Unit Supply Metrics",
+            "owner": "Green",
+            "priority": "P1",
+            "tags": [
+              "alerts",
+              "stock-risk"
+            ],
+            "requirements": [
+              "HCAT-319"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:09.000Z"
+          },
+          {
+            "id": "HCAT-320",
+            "title": "Add supply filters and sort controls",
+            "description": "Add filters and sort modes that stack by supply time units, supply quantity, in-stock status, and on-order status.",
+            "column": "backlog",
+            "lane": "Phase 57 Supply Filters Sorts And Subscriber Outputs",
+            "owner": "Violet",
+            "priority": "P0",
+            "tags": [
+              "filters",
+              "sort",
+              "supply"
+            ],
+            "requirements": [
+              "HCAT-320"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:10.000Z"
+          },
+          {
+            "id": "HCAT-321",
+            "title": "Support AND OR supply filter logic",
+            "description": "Let operators choose whether in-stock and on-order filters combine with AND or OR semantics alongside dashboard dimension filters.",
+            "column": "backlog",
+            "lane": "Phase 57 Supply Filters Sorts And Subscriber Outputs",
+            "owner": "Orange",
+            "priority": "P0",
+            "tags": [
+              "filter-logic",
+              "and-or"
+            ],
+            "requirements": [
+              "HCAT-321"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:11.000Z"
+          },
+          {
+            "id": "HCAT-322",
+            "title": "Publish effective forecast and supply subscriber payloads",
+            "description": "Create subscriber/export payloads that include lineage, overrides, effective forecasts, time-unit supply, on-order supply, and filter state.",
+            "column": "backlog",
+            "lane": "Phase 57 Supply Filters Sorts And Subscriber Outputs",
+            "owner": "Blue",
+            "priority": "P1",
+            "tags": [
+              "subscriptions",
+              "exports"
+            ],
+            "requirements": [
+              "HCAT-322"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:12.000Z"
+          },
+          {
+            "id": "HCAT-323",
+            "title": "Test and document supply override features",
+            "description": "Add core/API/web tests and docs for lineage, overrides, supply time units, purchase orders, on-order supply, filters, sort, and subscriber payloads.",
+            "column": "backlog",
+            "lane": "Phase 57 Supply Filters Sorts And Subscriber Outputs",
+            "owner": "Green",
+            "priority": "P1",
+            "tags": [
+              "tests",
+              "docs"
+            ],
+            "requirements": [
+              "HCAT-323"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:13.000Z"
+          },
+          {
+            "id": "HCAT-324",
+            "title": "Define override and supply drain acceptance",
+            "description": "Define final acceptance criteria for draining forecast lineage, override, time-unit supply, on-order supply, and supply filter/sort features.",
+            "column": "backlog",
+            "lane": "Phase 57 Supply Filters Sorts And Subscriber Outputs",
+            "owner": "Blue",
+            "priority": "P2",
+            "tags": [
+              "goal",
+              "acceptance"
+            ],
+            "requirements": [
+              "HCAT-324"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:14.000Z"
           }
         ]
       },
@@ -24876,6 +25058,97 @@
             ],
             "evidence": [],
             "updated_at": "2026-06-07T17:21:04.000Z"
+          },
+          {
+            "id": "HCAT-310",
+            "title": "Track forecast lineage metadata",
+            "description": "Persist timestamp created, source data relied on, and the agent, process, app, identity, or workflow that generated or changed each forecast.",
+            "column": "ready",
+            "lane": "Phase 55 Forecast Lineage And Override Controls",
+            "owner": "Blue",
+            "priority": "P0",
+            "tags": [
+              "forecast-lineage",
+              "audit",
+              "provenance"
+            ],
+            "requirements": [
+              "HCAT-310"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:00.000Z"
+          },
+          {
+            "id": "HCAT-311",
+            "title": "Enable forecast table overrides",
+            "description": "Allow operators to override forecast table cells with projected units, revenue, COGS, inventory, or demand changes directly from the dashboard table.",
+            "column": "ready",
+            "lane": "Phase 55 Forecast Lineage And Override Controls",
+            "owner": "Green",
+            "priority": "P0",
+            "tags": [
+              "override",
+              "table-editing"
+            ],
+            "requirements": [
+              "HCAT-311"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:01.000Z"
+          },
+          {
+            "id": "HCAT-312",
+            "title": "Capture override reason and approval context",
+            "description": "Require a structured reason, notes, and optional approval/review context whenever a forecast is overwritten.",
+            "column": "ready",
+            "lane": "Phase 55 Forecast Lineage And Override Controls",
+            "owner": "Orange",
+            "priority": "P0",
+            "tags": [
+              "override-reason",
+              "governance"
+            ],
+            "requirements": [
+              "HCAT-312"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:02.000Z"
+          },
+          {
+            "id": "HCAT-313",
+            "title": "Apply overrides to table graph and subscribers",
+            "description": "Factor approved overrides into dashboard table totals, graph series, time-unit supply calculations, exports, and subscribing consumers.",
+            "column": "ready",
+            "lane": "Phase 55 Forecast Lineage And Override Controls",
+            "owner": "Violet",
+            "priority": "P1",
+            "tags": [
+              "visualization",
+              "override"
+            ],
+            "requirements": [
+              "HCAT-313"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:03.000Z"
+          },
+          {
+            "id": "HCAT-314",
+            "title": "Add override history rollback and audit trail",
+            "description": "Provide history rows, rollback/revert behavior, and audit events for every forecast override.",
+            "column": "ready",
+            "lane": "Phase 55 Forecast Lineage And Override Controls",
+            "owner": "Blue",
+            "priority": "P1",
+            "tags": [
+              "history",
+              "rollback"
+            ],
+            "requirements": [
+              "HCAT-314"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:35:04.000Z"
           }
         ]
       },
@@ -32040,15 +32313,60 @@
       }
     ],
     "summary": {
-      "total_tasks": 309,
+      "total_tasks": 324,
       "done": 284,
-      "active": 5,
-      "backlog": 20,
+      "active": 10,
+      "backlog": 30,
       "blocked": 0,
-      "future_backlog": 20,
-      "checkpoints": 28
+      "future_backlog": 30,
+      "checkpoints": 29
     },
     "checkpoints": [
+      {
+        "id": "hcat-forecast-supply-created-checkpoint-1780853715000",
+        "title": ".hapaCatalog forecast lineage override and supply cycle filled",
+        "summary": "Added HCAT-310 through HCAT-324 for forecast lineage metadata, table overrides with rationale, effective forecast visualization/subscriber handling, time-unit supply, supply on order with purchase orders, projected inventory, risk states, and stacked supply filters/sorts.",
+        "verified": [
+          "Board already contained HCAT-285 through HCAT-309 forecast dashboard tranche",
+          "15 forecast lineage, override, supply, and subscriber cards appended append-only",
+          "First five cards are ready; remaining ten are backlog",
+          "Requirements cover timestamp/source/agent lineage, override reason workflow, effective values, time-unit supply, supply on order in units/time units, purchase orders, projected inventory, and stacked supply filters/sorts"
+        ],
+        "future_backlog": [
+          "HCAT-315",
+          "HCAT-316",
+          "HCAT-317",
+          "HCAT-318",
+          "HCAT-319",
+          "HCAT-320",
+          "HCAT-321",
+          "HCAT-322",
+          "HCAT-323",
+          "HCAT-324"
+        ],
+        "links": [
+          "README.md",
+          "docs/NEXT_WORK_CYCLE.md",
+          "docs/REQUIREMENTS_TRACEABILITY.md",
+          "docs/OPERATOR_GUIDE.md",
+          "docs/API.md",
+          "docs/FEATURE_PARITY.md",
+          "data/fixtures/forecast_dashboard_demo.json",
+          "src/catalog-core.mjs",
+          "src/server.mjs",
+          "bin/hapa-catalog.mjs",
+          "web/index.html",
+          "web/app.js",
+          "web/styles.css",
+          "test/catalog-core.test.mjs",
+          "test/api-smoke.test.mjs",
+          "scripts/web-e2e-smoke.mjs",
+          "scripts/desktop-smoke.mjs",
+          "docs/demo-data.json",
+          "board/BOARD.md"
+        ],
+        "created_at": "2026-06-07T17:35:15.000Z"
+      },
       {
         "id": "hcat-forecast-dashboard-created-checkpoint-1780852885000",
         "title": ".hapaCatalog forecast visualization dashboard cycle filled",
@@ -32230,45 +32548,6 @@
           "board/BOARD.md"
         ],
         "created_at": "2026-06-06T02:22:25.000Z"
-      },
-      {
-        "id": "hcat-review-operating-created-checkpoint-1780711825000",
-        "title": ".hapaCatalog review operating and pilot entry cycle filled",
-        "summary": "Added HCAT-235 through HCAT-259 to prepare live review-room operation, design partner pilot entry, production reliability slices, governed agent runtime, and commercial/refill signoff.",
-        "verified": [
-          "Board was drained at HCAT-234 before refill",
-          "25 review operating and pilot-entry cards appended append-only",
-          "First five cards are ready; remaining twenty are backlog",
-          "docs/NEXT_WORK_CYCLE.md and docs/REQUIREMENTS_TRACEABILITY.md updated with phases 40 through 44"
-        ],
-        "future_backlog": [
-          "HCAT-240",
-          "HCAT-241",
-          "HCAT-242",
-          "HCAT-243",
-          "HCAT-244",
-          "HCAT-245",
-          "HCAT-246",
-          "HCAT-247",
-          "HCAT-248",
-          "HCAT-249",
-          "HCAT-250",
-          "HCAT-251",
-          "HCAT-252",
-          "HCAT-253",
-          "HCAT-254",
-          "HCAT-255",
-          "HCAT-256",
-          "HCAT-257",
-          "HCAT-258",
-          "HCAT-259"
-        ],
-        "links": [
-          "docs/NEXT_WORK_CYCLE.md",
-          "docs/REQUIREMENTS_TRACEABILITY.md",
-          "board/BOARD.md"
-        ],
-        "created_at": "2026-06-06T02:10:25.000Z"
       }
     ]
   },

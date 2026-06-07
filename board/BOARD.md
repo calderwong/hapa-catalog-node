@@ -16,9 +16,9 @@ A card is done only when the implementation surface and verification evidence na
 
 ## Latest Snapshot
 
-- Checkpoint: `.hapaCatalog forecast visualization dashboard cycle filled`
-- Tasks: 284 done / 5 active / 20 backlog / 0 blocked
-- Events: 622 append-only events / 28 checkpoints
-- Ready: HCAT-285..289 forecast dashboard data model, dummy data fixture, time-increment aggregation, YoY baseline calculations, and API/CLI contract.
-- Backlog: HCAT-290..309 filter controls, hybrid actual/forecast table, day/week/month/quarter/year increments, YoY comparison row, graph series, responsive QA, tests, docs, Pages demo update, and drain acceptance.
+- Checkpoint: `.hapaCatalog forecast lineage override and supply cycle filled`
+- Tasks: 284 done / 10 active / 30 backlog / 0 blocked
+- Events: 638 append-only events / 29 checkpoints
+- Ready: HCAT-285..289 forecast dashboard foundation plus HCAT-310..314 forecast lineage, override editing, override rationale, effective-value visualization/subscriber handling, and override audit/rollback.
+- Backlog: HCAT-290..309 dashboard filter/table/graph/tests/docs work plus HCAT-315..324 time-unit supply, simulated purchase orders, supply on order, projected inventory, supply-risk states, supply filters/sorts, subscriber payloads, docs/tests, and drain acceptance.
 - Evidence: append-only board refill plus roadmap coverage in `docs/NEXT_WORK_CYCLE.md`.
