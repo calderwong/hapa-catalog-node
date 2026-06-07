@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generated_at": "2026-06-07T17:31:53.250Z",
+  "generated_at": "2026-06-07T17:44:45.904Z",
   "repo": {
     "name": "hapa-catalog-node",
     "github_url": "https://github.com/calderwong/hapa-catalog-node",
@@ -15,7 +15,7 @@
     "display_name": ".hapaCatalog",
     "api_version": "1.0.0",
     "contract_version": "hapa-catalog-node/0.1.0",
-    "time": "2026-06-07T17:31:53.251Z",
+    "time": "2026-06-07T17:44:45.904Z",
     "storage": {
       "db_path": "[local-path-redacted]",
       "data_dir": "[local-path-redacted]"
@@ -10041,7 +10041,7 @@
           "surface": "Protocol guardrail"
         },
         "created_at": "2026-06-05T22:40:54.880Z",
-        "updated_at": "2026-06-07T17:31:53.219Z",
+        "updated_at": "2026-06-07T17:44:45.870Z",
         "card": {
           "id": "card-protocol-source-truth",
           "card_kind": "protocol",
@@ -10091,7 +10091,7 @@
           "surface": "Process cycle"
         },
         "created_at": "2026-06-05T22:40:54.879Z",
-        "updated_at": "2026-06-07T17:31:53.218Z",
+        "updated_at": "2026-06-07T17:44:45.869Z",
         "card": {
           "id": "card-avatar-forecast-friend",
           "card_kind": "avatar",
@@ -10141,7 +10141,7 @@
           "surface": "Catalog/SKU governance"
         },
         "created_at": "2026-06-05T22:40:54.879Z",
-        "updated_at": "2026-06-07T17:31:53.217Z",
+        "updated_at": "2026-06-07T17:44:45.868Z",
         "card": {
           "id": "card-avatar-inventory-governor",
           "card_kind": "avatar",
@@ -10226,56 +10226,6 @@
         }
       },
       {
-        "id": "placement-card-avatar-forecast-friend-governance-role-role-demand-planner-advisor",
-        "card_id": "card-avatar-forecast-friend",
-        "placement_type": "governance_role",
-        "target_type": "role",
-        "target_id": "demand_planner",
-        "role": "advisor",
-        "decision_mode": "context",
-        "priority": 20,
-        "cadence": "weekly",
-        "active": true,
-        "metadata": {
-          "placed_by": "seed",
-          "surface": "Governance roles"
-        },
-        "created_at": "2026-06-05T22:40:54.880Z",
-        "updated_at": "2026-06-07T17:31:53.219Z",
-        "card": {
-          "id": "card-avatar-forecast-friend",
-          "card_kind": "avatar",
-          "name": "Forecasting Friend Avatar",
-          "owner_identity_id": "local_operator",
-          "organization_id": "hapa-local",
-          "source_node": "hapa-avatar-node",
-          "card_ref": "avatar://forecast-friend",
-          "skills": [
-            "demand forecasting",
-            "forecast quality",
-            "promotion review"
-          ],
-          "context": {
-            "voice": "Friendly demand planner with strong forecasting instincts and a habit of checking assumptions against actuals.",
-            "decision_bias": "Prefer explainable forecasts, scenario deltas, and quality-loop evidence before approving demand changes.",
-            "checks": [
-              "forecast confidence",
-              "recent actuals",
-              "promotion uplift",
-              "lead time risk"
-            ]
-          },
-          "tags": [
-            "avatar",
-            "forecasting",
-            "advisor"
-          ],
-          "status": "active",
-          "created_at": "2026-06-05T22:40:54.878Z",
-          "updated_at": "2026-06-05T22:40:54.878Z"
-        }
-      },
-      {
         "id": "placement-card-avatar-inventory-governor-governance-role-role-inventory-planner-advisor",
         "card_id": "card-avatar-inventory-governor",
         "placement_type": "governance_role",
@@ -10291,7 +10241,7 @@
           "surface": "Governance roles"
         },
         "created_at": "2026-06-05T22:40:54.879Z",
-        "updated_at": "2026-06-07T17:31:53.218Z",
+        "updated_at": "2026-06-07T17:44:45.869Z",
         "card": {
           "id": "card-avatar-inventory-governor",
           "card_kind": "avatar",
@@ -10324,6 +10274,56 @@
           "created_at": "2026-06-05T22:40:54.878Z",
           "updated_at": "2026-06-05T22:40:54.878Z"
         }
+      },
+      {
+        "id": "placement-card-avatar-forecast-friend-governance-role-role-demand-planner-advisor",
+        "card_id": "card-avatar-forecast-friend",
+        "placement_type": "governance_role",
+        "target_type": "role",
+        "target_id": "demand_planner",
+        "role": "advisor",
+        "decision_mode": "context",
+        "priority": 20,
+        "cadence": "weekly",
+        "active": true,
+        "metadata": {
+          "placed_by": "seed",
+          "surface": "Governance roles"
+        },
+        "created_at": "2026-06-05T22:40:54.880Z",
+        "updated_at": "2026-06-07T17:44:45.869Z",
+        "card": {
+          "id": "card-avatar-forecast-friend",
+          "card_kind": "avatar",
+          "name": "Forecasting Friend Avatar",
+          "owner_identity_id": "local_operator",
+          "organization_id": "hapa-local",
+          "source_node": "hapa-avatar-node",
+          "card_ref": "avatar://forecast-friend",
+          "skills": [
+            "demand forecasting",
+            "forecast quality",
+            "promotion review"
+          ],
+          "context": {
+            "voice": "Friendly demand planner with strong forecasting instincts and a habit of checking assumptions against actuals.",
+            "decision_bias": "Prefer explainable forecasts, scenario deltas, and quality-loop evidence before approving demand changes.",
+            "checks": [
+              "forecast confidence",
+              "recent actuals",
+              "promotion uplift",
+              "lead time risk"
+            ]
+          },
+          "tags": [
+            "avatar",
+            "forecasting",
+            "advisor"
+          ],
+          "status": "active",
+          "created_at": "2026-06-05T22:40:54.878Z",
+          "updated_at": "2026-06-05T22:40:54.878Z"
+        }
       }
     ],
     "processes": [
@@ -10348,7 +10348,7 @@
           "description": "Review inventory positions, reorder risk, and stockout prevention with placed Hapa cards."
         },
         "created_at": "2026-06-05T22:40:54.880Z",
-        "updated_at": "2026-06-07T17:31:53.219Z"
+        "updated_at": "2026-06-07T17:44:45.870Z"
       },
       {
         "id": "process-catalog-sku-review",
@@ -10371,7 +10371,7 @@
           "description": "Review item master changes, identifiers, media, and catalog quality with placed Hapa cards."
         },
         "created_at": "2026-06-05T22:40:54.881Z",
-        "updated_at": "2026-06-07T17:31:53.219Z"
+        "updated_at": "2026-06-07T17:44:45.871Z"
       },
       {
         "id": "process-forecast-cycle",
@@ -10394,7 +10394,7 @@
           "description": "Review forecast runs, actuals, and scenario assumptions with placed Hapa cards."
         },
         "created_at": "2026-06-05T22:40:54.880Z",
-        "updated_at": "2026-06-07T17:31:53.219Z"
+        "updated_at": "2026-06-07T17:44:45.870Z"
       },
       {
         "id": "process-pilot-forecast-instock-review",
@@ -24410,8 +24410,8 @@
   "board": {
     "project_id": "hapa-app-hapa-catalog-node",
     "available": true,
-    "event_count": 638,
-    "updated_at": "2026-06-07T17:35:15.000Z",
+    "event_count": 659,
+    "updated_at": "2026-06-07T17:43:20.000Z",
     "columns": [
       {
         "id": "backlog",
@@ -24959,6 +24959,290 @@
             ],
             "evidence": [],
             "updated_at": "2026-06-07T17:35:14.000Z"
+          },
+          {
+            "id": "HCAT-330",
+            "title": "Create reusable forecast assumption set schema",
+            "description": "Model named assumption sets for seasonality, promotions, price moves, demand shocks, launch ramps, cannibalization, lead time, service level, and inventory constraints.",
+            "column": "backlog",
+            "lane": "Phase 59 Assumption Modeling And Scenario Runs",
+            "owner": "Green",
+            "priority": "P0",
+            "tags": [
+              "assumptions",
+              "schema",
+              "forecast-models"
+            ],
+            "requirements": [
+              "HCAT-330"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:05.000Z"
+          },
+          {
+            "id": "HCAT-331",
+            "title": "Build assumption editor for new forecast runs",
+            "description": "Add a web and desktop assumption editor that lets users choose existing assumption sets or tune drivers before starting a new forecast run.",
+            "column": "backlog",
+            "lane": "Phase 59 Assumption Modeling And Scenario Runs",
+            "owner": "Violet",
+            "priority": "P0",
+            "tags": [
+              "ui",
+              "assumption-editor",
+              "forecast-run"
+            ],
+            "requirements": [
+              "HCAT-331"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:06.000Z"
+          },
+          {
+            "id": "HCAT-332",
+            "title": "Add API and CLI contracts for assumption driven runs",
+            "description": "Expose commands and endpoints for creating, listing, validating, cloning, and applying assumption sets to new forecast runs.",
+            "column": "backlog",
+            "lane": "Phase 59 Assumption Modeling And Scenario Runs",
+            "owner": "Blue",
+            "priority": "P0",
+            "tags": [
+              "api",
+              "cli",
+              "assumptions"
+            ],
+            "requirements": [
+              "HCAT-332"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:07.000Z"
+          },
+          {
+            "id": "HCAT-333",
+            "title": "Inject assumptions into forecast model inputs",
+            "description": "Wire assumption sets into deterministic forecast model inputs so model runs use the selected drivers instead of dashboard-only annotations.",
+            "column": "backlog",
+            "lane": "Phase 59 Assumption Modeling And Scenario Runs",
+            "owner": "Orange",
+            "priority": "P0",
+            "tags": [
+              "model-inputs",
+              "feature-store",
+              "assumptions"
+            ],
+            "requirements": [
+              "HCAT-333"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:08.000Z"
+          },
+          {
+            "id": "HCAT-334",
+            "title": "Add sensitivity analysis and scenario branching",
+            "description": "Let users branch a forecast run into best case, base case, downside, and custom assumption variants with sensitivity deltas.",
+            "column": "backlog",
+            "lane": "Phase 59 Assumption Modeling And Scenario Runs",
+            "owner": "Green",
+            "priority": "P1",
+            "tags": [
+              "sensitivity",
+              "scenario-branching"
+            ],
+            "requirements": [
+              "HCAT-334"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:09.000Z"
+          },
+          {
+            "id": "HCAT-335",
+            "title": "Store methodology metadata for forecast runs",
+            "description": "Persist method name, model family, model version, horizon, granularity, training window, assumptions, and feature inputs for every forecast run.",
+            "column": "backlog",
+            "lane": "Phase 60 Forecast Run And Methodology Comparisons",
+            "owner": "Blue",
+            "priority": "P0",
+            "tags": [
+              "methodology",
+              "metadata",
+              "forecast-runs"
+            ],
+            "requirements": [
+              "HCAT-335"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:10.000Z"
+          },
+          {
+            "id": "HCAT-336",
+            "title": "Compare multiple forecast runs side by side",
+            "description": "Allow users to select two or more forecast runs and compare units, revenue, COGS, inventory, supply, assumptions, and confidence by bucket.",
+            "column": "backlog",
+            "lane": "Phase 60 Forecast Run And Methodology Comparisons",
+            "owner": "Violet",
+            "priority": "P0",
+            "tags": [
+              "comparison",
+              "ui",
+              "forecast-runs"
+            ],
+            "requirements": [
+              "HCAT-336"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:11.000Z"
+          },
+          {
+            "id": "HCAT-337",
+            "title": "Benchmark forecast methodologies with backtests",
+            "description": "Compare methodologies such as naive baseline, moving average, seasonal index, promotion-adjusted, and agent-assisted assumptions against actuals.",
+            "column": "backlog",
+            "lane": "Phase 60 Forecast Run And Methodology Comparisons",
+            "owner": "Green",
+            "priority": "P0",
+            "tags": [
+              "backtesting",
+              "methodology",
+              "quality"
+            ],
+            "requirements": [
+              "HCAT-337"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:12.000Z"
+          },
+          {
+            "id": "HCAT-338",
+            "title": "Promote a forecast run as plan of record",
+            "description": "Let an operator or placed Hapa card promote a selected forecast run or scenario branch as the plan of record for a level and time horizon.",
+            "column": "backlog",
+            "lane": "Phase 60 Forecast Run And Methodology Comparisons",
+            "owner": "Orange",
+            "priority": "P1",
+            "tags": [
+              "plan-of-record",
+              "approval",
+              "governance"
+            ],
+            "requirements": [
+              "HCAT-338"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:13.000Z"
+          },
+          {
+            "id": "HCAT-339",
+            "title": "Diff forecast runs by bucket metric and assumption",
+            "description": "Provide structured diffs between forecast runs across bucket values, assumptions, source data, methodology, overrides, and allocation rules.",
+            "column": "backlog",
+            "lane": "Phase 60 Forecast Run And Methodology Comparisons",
+            "owner": "Blue",
+            "priority": "P1",
+            "tags": [
+              "diff",
+              "assumptions",
+              "forecast-runs"
+            ],
+            "requirements": [
+              "HCAT-339"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:14.000Z"
+          },
+          {
+            "id": "HCAT-340",
+            "title": "Build forecast experimentation dashboard panel",
+            "description": "Add a dashboard panel for creating assumption experiments, launching runs, selecting comparison sets, and reviewing methodology outcomes.",
+            "column": "backlog",
+            "lane": "Phase 61 Experimentation UI Governance Tests Docs",
+            "owner": "Violet",
+            "priority": "P1",
+            "tags": [
+              "ui",
+              "experimentation",
+              "dashboard"
+            ],
+            "requirements": [
+              "HCAT-340"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:15.000Z"
+          },
+          {
+            "id": "HCAT-341",
+            "title": "Publish forecast experiment subscriber payloads",
+            "description": "Expose subscriber and export payloads for assumption sets, run comparisons, methodology benchmarks, diffs, and plan-of-record changes.",
+            "column": "backlog",
+            "lane": "Phase 61 Experimentation UI Governance Tests Docs",
+            "owner": "Blue",
+            "priority": "P1",
+            "tags": [
+              "subscriptions",
+              "exports",
+              "forecast-experiments"
+            ],
+            "requirements": [
+              "HCAT-341"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:16.000Z"
+          },
+          {
+            "id": "HCAT-342",
+            "title": "Govern assumption and methodology changes with cards",
+            "description": "Route assumption edits, methodology changes, and plan-of-record promotions through placed Hapa cards when governance settings require it.",
+            "column": "backlog",
+            "lane": "Phase 61 Experimentation UI Governance Tests Docs",
+            "owner": "Orange",
+            "priority": "P1",
+            "tags": [
+              "hapa-cards",
+              "governance",
+              "forecasting"
+            ],
+            "requirements": [
+              "HCAT-342"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:17.000Z"
+          },
+          {
+            "id": "HCAT-343",
+            "title": "Seed fixture data for forecast experiments",
+            "description": "Generate deterministic dummy assumption sets, forecast runs, methodology comparisons, backtest actuals, and plan-of-record examples across the 100-SKU fixture.",
+            "column": "backlog",
+            "lane": "Phase 61 Experimentation UI Governance Tests Docs",
+            "owner": "Green",
+            "priority": "P1",
+            "tags": [
+              "fixtures",
+              "dummy-data",
+              "forecast-experiments"
+            ],
+            "requirements": [
+              "HCAT-343"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:18.000Z"
+          },
+          {
+            "id": "HCAT-344",
+            "title": "Test document and define forecast experimentation acceptance",
+            "description": "Add tests, docs, traceability, browser evidence, and final drain criteria for multi-granularity forecast manipulation and methodology comparison.",
+            "column": "backlog",
+            "lane": "Phase 61 Experimentation UI Governance Tests Docs",
+            "owner": "Blue",
+            "priority": "P2",
+            "tags": [
+              "tests",
+              "docs",
+              "acceptance"
+            ],
+            "requirements": [
+              "HCAT-344"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:19.000Z"
           }
         ]
       },
@@ -25149,6 +25433,101 @@
             ],
             "evidence": [],
             "updated_at": "2026-06-07T17:35:04.000Z"
+          },
+          {
+            "id": "HCAT-325",
+            "title": "Define forecast hierarchy and granularity contract",
+            "description": "Define the supported forecast manipulation levels across SKU, variant, product family, category, brand, state, location, channel, and aggregate portfolio views.",
+            "column": "ready",
+            "lane": "Phase 58 Forecast Granularity And Hierarchy Controls",
+            "owner": "Blue",
+            "priority": "P0",
+            "tags": [
+              "forecast-hierarchy",
+              "granularity",
+              "contract"
+            ],
+            "requirements": [
+              "HCAT-325"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:00.000Z"
+          },
+          {
+            "id": "HCAT-326",
+            "title": "Add granularity selector for forecast views and edits",
+            "description": "Let users switch forecast tables and charts between item, SKU, category, brand, state, location, channel, and portfolio levels before editing or comparing values.",
+            "column": "ready",
+            "lane": "Phase 58 Forecast Granularity And Hierarchy Controls",
+            "owner": "Violet",
+            "priority": "P0",
+            "tags": [
+              "ui",
+              "forecast-editing",
+              "granularity"
+            ],
+            "requirements": [
+              "HCAT-326"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:01.000Z"
+          },
+          {
+            "id": "HCAT-327",
+            "title": "Implement top down and bottom up forecast allocation",
+            "description": "Support both bottom-up SKU aggregation and top-down allocation from category, brand, or portfolio forecasts back into child SKUs.",
+            "column": "ready",
+            "lane": "Phase 58 Forecast Granularity And Hierarchy Controls",
+            "owner": "Green",
+            "priority": "P0",
+            "tags": [
+              "allocation",
+              "rollups",
+              "forecast-models"
+            ],
+            "requirements": [
+              "HCAT-327"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:02.000Z"
+          },
+          {
+            "id": "HCAT-328",
+            "title": "Reconcile forecast edits across levels",
+            "description": "Add reconciliation rules for conflicting edits made at SKU, category, brand, location, or portfolio levels.",
+            "column": "ready",
+            "lane": "Phase 58 Forecast Granularity And Hierarchy Controls",
+            "owner": "Orange",
+            "priority": "P1",
+            "tags": [
+              "reconciliation",
+              "override",
+              "hierarchy"
+            ],
+            "requirements": [
+              "HCAT-328"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:03.000Z"
+          },
+          {
+            "id": "HCAT-329",
+            "title": "Persist manipulation lineage by level",
+            "description": "Track which hierarchy level, filters, assumptions, and actor changed each forecast value or allocation run.",
+            "column": "ready",
+            "lane": "Phase 58 Forecast Granularity And Hierarchy Controls",
+            "owner": "Blue",
+            "priority": "P1",
+            "tags": [
+              "lineage",
+              "audit",
+              "granularity"
+            ],
+            "requirements": [
+              "HCAT-329"
+            ],
+            "evidence": [],
+            "updated_at": "2026-06-07T17:43:04.000Z"
           }
         ]
       },
@@ -32313,15 +32692,65 @@
       }
     ],
     "summary": {
-      "total_tasks": 324,
+      "total_tasks": 344,
       "done": 284,
-      "active": 10,
-      "backlog": 30,
+      "active": 15,
+      "backlog": 45,
       "blocked": 0,
-      "future_backlog": 30,
-      "checkpoints": 29
+      "future_backlog": 45,
+      "checkpoints": 30
     },
     "checkpoints": [
+      {
+        "id": "hcat-forecast-experiments-created-checkpoint-1780854200000",
+        "title": ".hapaCatalog forecast experimentation granularity and methodology cycle filled",
+        "summary": "Added HCAT-325 through HCAT-344 for multi-level forecast manipulation, hierarchy reconciliation, reusable assumption sets, assumption-driven forecast runs, scenario branching, side-by-side run comparisons, methodology backtests, plan-of-record promotion, and governance/test/docs coverage.",
+        "verified": [
+          "Board already contained forecast dashboard, lineage, override, and supply tranches through HCAT-324",
+          "20 forecast experimentation, assumptions, granularity, comparison, methodology, and governance cards appended append-only",
+          "First five hierarchy/granularity cards are ready; remaining fifteen are backlog",
+          "Requirements cover forecast manipulation at SKU/category/brand/state/location/channel/portfolio levels, assumption-driven new runs, multiple run comparison, methodology benchmarking, and plan-of-record promotion"
+        ],
+        "future_backlog": [
+          "HCAT-330",
+          "HCAT-331",
+          "HCAT-332",
+          "HCAT-333",
+          "HCAT-334",
+          "HCAT-335",
+          "HCAT-336",
+          "HCAT-337",
+          "HCAT-338",
+          "HCAT-339",
+          "HCAT-340",
+          "HCAT-341",
+          "HCAT-342",
+          "HCAT-343",
+          "HCAT-344"
+        ],
+        "links": [
+          "README.md",
+          "docs/NEXT_WORK_CYCLE.md",
+          "docs/REQUIREMENTS_TRACEABILITY.md",
+          "docs/OPERATOR_GUIDE.md",
+          "docs/API.md",
+          "docs/FEATURE_PARITY.md",
+          "data/fixtures/forecast_dashboard_demo.json",
+          "src/catalog-core.mjs",
+          "src/server.mjs",
+          "bin/hapa-catalog.mjs",
+          "web/index.html",
+          "web/app.js",
+          "web/styles.css",
+          "test/catalog-core.test.mjs",
+          "test/api-smoke.test.mjs",
+          "scripts/web-e2e-smoke.mjs",
+          "scripts/desktop-smoke.mjs",
+          "docs/demo-data.json",
+          "board/BOARD.md"
+        ],
+        "created_at": "2026-06-07T17:43:20.000Z"
+      },
       {
         "id": "hcat-forecast-supply-created-checkpoint-1780853715000",
         "title": ".hapaCatalog forecast lineage override and supply cycle filled",
@@ -32518,36 +32947,6 @@
           "board/BOARD.md"
         ],
         "created_at": "2026-06-06T02:40:25.000Z"
-      },
-      {
-        "id": "hcat-review-operating-drained-checkpoint-1780712545000",
-        "title": ".hapaCatalog review operating and pilot entry cycle drained",
-        "summary": "HCAT-235 through HCAT-259 moved to done after adding the review-operating drain, Ops/web controls, API/CLI support, docs traceability, and full verification coverage.",
-        "verified": [
-          "node bin/hapa-catalog.mjs next-cycle run --phase review-operating --actor codex-drain: ok, 25 artifacts / 5 test runs",
-          "npm test: 40/40 passing",
-          "node bin/hapa-catalog.mjs self-test: ok, review_operating_drain included",
-          "npm run web:e2e: ok, Operate action present, 153 next-cycle artifacts / 30 test runs",
-          "npm run desktop:smoke: ok",
-          "npm run performance:smoke: ok",
-          "Browser/server refreshed at http://127.0.0.1:8768 with review-operating support"
-        ],
-        "future_backlog": [],
-        "links": [
-          "src/catalog-core.mjs",
-          "src/server.mjs",
-          "bin/hapa-catalog.mjs",
-          "web/app.js",
-          "scripts/web-e2e-smoke.mjs",
-          "test/catalog-core.test.mjs",
-          "test/api-smoke.test.mjs",
-          "README.md",
-          "docs/API.md",
-          "docs/NEXT_WORK_CYCLE.md",
-          "docs/REQUIREMENTS_TRACEABILITY.md",
-          "board/BOARD.md"
-        ],
-        "created_at": "2026-06-06T02:22:25.000Z"
       }
     ]
   },

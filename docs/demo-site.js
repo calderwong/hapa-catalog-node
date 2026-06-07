@@ -174,7 +174,7 @@ function renderBoard() {
   els.list.className = 'list board-grid';
   els.list.innerHTML = board.columns.map(column => {
     const tasks = column.tasks.filter(task => [task.id, task.title, task.description, task.lane].join(' ').toLowerCase().includes(state.query));
-    const sample = column.id === 'done' ? tasks.slice(-10).reverse() : tasks.slice(0, 10);
+    const sample = boardColumnPreview(column.id, tasks);
     return `
       <section class="kanban-column">
         <header><span>${escapeHtml(column.title)}</span><strong>${tasks.length}</strong></header>
@@ -193,6 +193,13 @@ function renderBoard() {
     </div>
     ${demo.screenshot ? `<img class="hero-image" src="${escapeAttribute(demo.screenshot)}" alt="Drained .hapaCatalog board screenshot" />` : ''}
   `;
+}
+
+function boardColumnPreview(columnId, tasks) {
+  if (state.query) return tasks.slice(0, 24);
+  if (columnId === 'done') return tasks.slice(-10).reverse();
+  if (tasks.length <= 20) return tasks;
+  return [...tasks.slice(0, 5), ...tasks.slice(-15)];
 }
 
 function taskCard(task) {

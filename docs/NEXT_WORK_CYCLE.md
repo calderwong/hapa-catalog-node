@@ -446,3 +446,38 @@ The forecast lineage/override/supply refill creates 15 cards:
 - Phase 55: HCAT-310 forecast lineage metadata, HCAT-311 table overrides, HCAT-312 override reason and approval context, HCAT-313 effective values for table/graph/subscribers, and HCAT-314 override history/rollback/audit trail.
 - Phase 56: HCAT-315 time-unit supply from forecast rate, HCAT-316 simulated purchase orders, HCAT-317 projected inventory with supply on order, HCAT-318 supply on order in units and time units, and HCAT-319 supply risk and stockout thresholds.
 - Phase 57: HCAT-320 supply filters/sort controls, HCAT-321 AND/OR supply filter logic, HCAT-322 subscriber payloads, HCAT-323 tests/docs, and HCAT-324 drain acceptance.
+
+## Forecast Experimentation, Granularity, And Methodology Refill
+
+The forecast dashboard has a follow-on experimentation tranche, HCAT-325 through HCAT-344, that lets operators manipulate forecasts at different hierarchy levels, create assumption-driven forecast runs, compare multiple runs and methods, and govern the selected plan of record.
+
+### Phase 58: Forecast Granularity And Hierarchy Controls
+
+Make forecast manipulation explicit across levels. This phase covers the hierarchy/granularity contract, a granularity selector for forecast views and edits, top-down and bottom-up allocation, cross-level reconciliation rules, and manipulation lineage by hierarchy level.
+
+Primary outcome: an operator can work at SKU, category, brand, state, location, channel, or portfolio level without losing traceability or creating silent parent/child forecast conflicts.
+
+### Phase 59: Assumption Modeling And Scenario Runs
+
+Turn assumptions into first-class forecast inputs. This phase covers reusable assumption sets, a web/desktop assumption editor, API/CLI assumption-run contracts, injection into model inputs, and scenario branching with sensitivity analysis.
+
+Primary outcome: new forecast runs can be created from explicit, versioned assumptions and each run explains how those assumptions affected units, revenue, cost, inventory, confidence, and risk.
+
+### Phase 60: Forecast Run And Methodology Comparisons
+
+Make forecast methods comparable. This phase covers methodology metadata, side-by-side forecast run comparison, methodology backtesting, plan-of-record promotion, and structured diffs by bucket, metric, and assumption.
+
+Primary outcome: operators can compare multiple forecast runs and modeling approaches, inspect why they differ, and promote one run as the governed plan of record.
+
+### Phase 61: Experimentation UI Governance Tests Docs
+
+Close the experimentation layer with surfaces and evidence. This phase covers the forecast experimentation dashboard panel, subscriber/export payloads, Hapa card governance for assumptions and methodology changes, deterministic fixture data, tests, docs, and drain acceptance.
+
+Primary outcome: the experimentation workflow is visible in web and desktop, available through API/CLI/subscribers, backed by demo data, and ready for review with tests and traceability.
+
+The forecast experimentation refill creates 20 cards:
+
+- Phase 58: HCAT-325 forecast hierarchy/granularity contract, HCAT-326 granularity selector, HCAT-327 top-down and bottom-up allocation, HCAT-328 cross-level reconciliation, and HCAT-329 manipulation lineage.
+- Phase 59: HCAT-330 reusable assumption set schema, HCAT-331 assumption editor, HCAT-332 API/CLI assumption-driven run contracts, HCAT-333 model input injection, and HCAT-334 sensitivity analysis/scenario branching.
+- Phase 60: HCAT-335 methodology metadata, HCAT-336 side-by-side run comparison, HCAT-337 methodology backtests, HCAT-338 plan-of-record promotion, and HCAT-339 forecast run diffs.
+- Phase 61: HCAT-340 experimentation dashboard panel, HCAT-341 subscriber payloads, HCAT-342 Hapa card governance, HCAT-343 fixture data, and HCAT-344 tests/docs/drain acceptance.
