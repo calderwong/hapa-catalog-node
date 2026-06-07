@@ -16,8 +16,9 @@ A card is done only when the implementation surface and verification evidence na
 
 ## Latest Snapshot
 
-- Checkpoint: `.hapaCatalog parity documentation demo data and UI cycle drained`
-- Tasks: 284 done / 0 active / 0 backlog / 0 blocked
-- Events: 596 append-only events / 27 checkpoints
-- Done: HCAT-260..284 parity matrix, API/CLI/web/desktop parity evidence, documentation completion, 100-SKU demo data validation, operator UI enhancements, browser screenshot evidence, desktop smoke, performance smoke, traceability refresh, and next-drain acceptance.
-- Evidence: `npm test`, `npm run web:e2e`, `npm run desktop:smoke`, `npm run performance:smoke`, `node bin/hapa-catalog.mjs self-test`, demo fixture CLI checks, final browser verification at `http://127.0.0.1:8768`, and `outputs/hapa-catalog-board-drained.png`.
+- Checkpoint: `.hapaCatalog forecast visualization dashboard cycle filled`
+- Tasks: 284 done / 5 active / 20 backlog / 0 blocked
+- Events: 622 append-only events / 28 checkpoints
+- Ready: HCAT-285..289 forecast dashboard data model, dummy data fixture, time-increment aggregation, YoY baseline calculations, and API/CLI contract.
+- Backlog: HCAT-290..309 filter controls, hybrid actual/forecast table, day/week/month/quarter/year increments, YoY comparison row, graph series, responsive QA, tests, docs, Pages demo update, and drain acceptance.
+- Evidence: append-only board refill plus roadmap coverage in `docs/NEXT_WORK_CYCLE.md`.

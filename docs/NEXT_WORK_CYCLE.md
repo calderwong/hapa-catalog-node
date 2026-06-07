@@ -376,3 +376,45 @@ The parity/docs/UI drain creates 25 artifacts and 5 passed test-run records with
 - Phase 47: `demo_fixture_taxonomy_validation`, `demo_fixture_api_cli_parity_tests`, `demo_web_import_walkthrough`, `forecast_inventory_diversity_checks`, and `fixture_quality_checks`.
 - Phase 48: `topbar_telemetry_action_hierarchy`, `item_master_density_filters`, `board_empty_refill_states`, `ops_actions_by_parity_domain`, and `accessibility_responsive_scroll_polish`.
 - Phase 49: `parity_browser_screenshots`, `desktop_parity_smoke_notes`, `parity_traceability_refresh`, `demo_fixture_performance_check`, and `next_drain_goal_acceptance`.
+
+## Forecast Visualization Dashboard Refill
+
+After the HCAT-284 parity/docs/UI drain, the next board refill is HCAT-285 through HCAT-309. These cards create a forecast visualization dashboard that combines item filters, trailing actuals, projected forecasts, year-over-year comparisons, dummy data, and filter-responsive graphs.
+
+### Phase 50: Forecast Dashboard Data Foundation
+
+Define the reusable dashboard contract before UI work. This phase covers the dashboard data model, deterministic dummy data fixture, day/week/month/quarter/year aggregation engine, YoY baseline calculations, and API/CLI contract.
+
+Primary outcome: the table, graph, API, CLI, tests, and static demo all read from one forecast dashboard contract rather than separate UI-only calculations.
+
+### Phase 51: Filter And Query Controls
+
+Build the dashboard filter spine. This phase covers category, brand, state, and SKU filters; filter metadata and empty states; persisted filter/increment state; optimized query paths; and accessibility/responsive checks.
+
+Primary outcome: changing any filter updates the table, graph, and inspector consistently across web, desktop, API, CLI, and Pages demo surfaces.
+
+### Phase 52: Actual Forecast Table
+
+Build the hybrid table requested for the dashboard. This phase covers the actual/forecast table shell, trailing actual units sold/revenue sold/total cost cells, projected units/revenue/COGS cells, the increment selector, and the year-over-year comparison row below the actual/forecast row.
+
+Primary outcome: operators can scan one table that transitions from historical actuals into forecast projections and immediately compare each bucket against the prior year.
+
+### Phase 53: Forecast Visualization Graphs
+
+Create the visual forecasting layer. This phase covers graph series for inventory levels, demand, actual/projected units, revenue, total cost, COGS, margin, tooltip/legend/axis formatting, chart-table selection coordination, and responsive visual QA.
+
+Primary outcome: inventory, demand, revenue, and cost trends respond to the same filters and time increments as the table.
+
+### Phase 54: Forecast Dashboard Tests Docs Release
+
+Close the cycle with evidence. This phase covers core/API tests, web/desktop smoke coverage, operator/API docs, GitHub Pages snapshot updates, and final drain acceptance.
+
+Primary outcome: the forecast visualization dashboard can be drained with implementation evidence, screenshots, docs, tests, and hosted demo coverage.
+
+The forecast visualization dashboard refill creates 25 cards:
+
+- Phase 50: HCAT-285 forecast dashboard data model, HCAT-286 dummy data fixture, HCAT-287 time increment aggregation, HCAT-288 YoY baseline and variance calculations, and HCAT-289 API/CLI contract.
+- Phase 51: HCAT-290 category/brand/state/SKU filters, HCAT-291 filter metadata and empty states, HCAT-292 persisted filter/increment state, HCAT-293 optimized filtered query path, and HCAT-294 responsive/accessibility filter verification.
+- Phase 52: HCAT-295 hybrid actual/forecast table shell, HCAT-296 actuals metrics cells, HCAT-297 forecast projection metrics cells, HCAT-298 increment selector, and HCAT-299 YoY comparison row.
+- Phase 53: HCAT-300 inventory and demand graph series, HCAT-301 revenue/cost/COGS graph series, HCAT-302 tooltip/legend/axis formatting, HCAT-303 chart/table selection coordination, and HCAT-304 visual QA.
+- Phase 54: HCAT-305 core/API tests, HCAT-306 web/desktop smoke coverage, HCAT-307 docs, HCAT-308 GitHub Pages demo update, and HCAT-309 drain acceptance.
