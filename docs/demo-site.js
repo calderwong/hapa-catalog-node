@@ -1,11 +1,14 @@
 const state = {
-  view: 'items',
+  view: window.location.hash?.replace('#', '') || 'items',
   query: '',
   category: '',
   brand: '',
   status: '',
   selectedSku: ''
 };
+
+const ASSET_VERSION = '20260607-forecast-dashboard-v2';
+const VIEWS = ['items', 'board', 'cards', 'forecast', 'ops', 'docs'];
 
 const els = {
   skuChip: document.querySelector('#skuChip'),
@@ -28,7 +31,8 @@ const els = {
 let demo = null;
 
 async function init() {
-  demo = await fetch('demo-data.json').then(response => response.json());
+  if (!VIEWS.includes(state.view)) state.view = 'items';
+  demo = await fetch(`demo-data.json?v=${ASSET_VERSION}`).then(response => response.json());
   state.selectedSku = demo.items[0]?.sku || '';
   els.githubLink.href = demo.repo.github_url;
   els.generatedAt.textContent = `Generated ${new Date(demo.generated_at).toLocaleString()}`;
@@ -57,10 +61,12 @@ function bindEvents() {
     });
   });
   document.querySelectorAll('[data-view]').forEach(button => {
+    button.classList.toggle('active', button.dataset.view === state.view);
     button.addEventListener('click', () => {
       document.querySelectorAll('[data-view]').forEach(item => item.classList.remove('active'));
       button.classList.add('active');
       state.view = button.dataset.view;
+      window.history.replaceState(null, '', `#${state.view}`);
       render();
     });
   });
